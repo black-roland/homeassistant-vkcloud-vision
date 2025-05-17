@@ -1,7 +1,7 @@
 # VK Cloud Vision для Home Assistant
 
 [![Добавить репозиторий в HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=black-roland&repository=homeassistant-vkcloud-vision&category=integration)
-[![Настроить интеграцию](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloudvision)
+[![Настроить интеграцию](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloud_vision)
 
 Интеграция добавляет поддержку облачного распознавания объектов через сервис [VK Cloud Vision](https://cloud.vk.com/vision/) в Home Assistant.
 
@@ -46,14 +46,16 @@
 
 ## Уведомление
 
-Данная интеграция является неофициальной и не связана с VK Cloud.
+Данная интеграция является неофициальной и не связана с VK Cloud. VK Cloud Vision — это сервис, предоставляемый VK Cloud.
+
+Данная интеграция не является официальным продуктом VK Cloud и не поддерживается VK.
 
 ---
 
 # VK Cloud Vision for Home Assistant
 
 [![Add repository to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=black-roland&repository=homeassistant-vkcloud-vision&category=integration)
-[![Configure Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloudvision)
+[![Configure Integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloud_vision)
 
 Integration for cloud-based object recognition using [VK Cloud Vision](https://cloud.vk.com/vision/) service.
 
@@ -80,4 +82,6 @@ Pricing: [cloud.vk.com/docs/ru/ml/vision/tariffication](https://cloud.vk.com/doc
 
 ## Notice
 
-This is a community project, not affiliated with VK Cloud.
+This is a community project, not affiliated with VK Cloud. VK Cloud Vision is a service provided by VK Cloud.
+
+This integration is not an official VK Cloud product and is not supported by VK.
