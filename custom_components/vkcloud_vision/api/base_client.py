@@ -4,14 +4,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from typing import Any, Dict, List, Optional
+import asyncio
 import json
+import logging
+from typing import Any, Dict, List, Optional
 
-from aiohttp import ClientSession, FormData
+from aiohttp import ClientError, ClientSession, FormData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .vkcloud_vision_auth import VKCloudVisionAuth
+
+_LOGGER = logging.getLogger(__name__)
+
+DEFAULT_TIMEOUT = 10
+MAX_RETRIES = 3
+RETRY_DELAY = 1
 
 
 class BaseVKCloudVisionClient:
@@ -54,20 +62,47 @@ class BaseVKCloudVisionClient:
         data.add_field("meta", json.dumps(meta))
 
         url = f"{self._base_url}{endpoint}"
+        last_error = None
 
-        # TODO: Timeout 10 seconds + retry logic
-        try:
-            async with self._session.post(
-                url,
-                params=query_params,
-                data=data,
-            ) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    raise Exception(f"API request failed: {response.status} {error_text}")
-                result = await response.json()
-                if result.get("status") in [400, 403, 500]:
-                    raise Exception(f"API error: {result.get('body')}")
-                return result
-        except Exception as e:
-            raise Exception(f"Error during API request: {e}")
+        for attempt in range(MAX_RETRIES):
+            try:
+                async with asyncio.timeout(DEFAULT_TIMEOUT):
+                    async with self._session.post(
+                        url,
+                        params=query_params,
+                        data=data,
+                        raise_for_status=True,
+                    ) as response:
+                        result = await response.json()
+                        if result.get("status") != 200:
+                            raise Exception(f"API error: {result.get('body')}")
+                        return result
+
+            except asyncio.TimeoutError:
+                last_error = f"Request timed out after {DEFAULT_TIMEOUT} seconds"
+                _LOGGER.warning(
+                    "Timeout occurred on attempt %d/%d", attempt + 1, MAX_RETRIES
+                )
+            except ClientError as err:
+                last_error = f"Client error: {str(err)}"
+                _LOGGER.warning(
+                    "Client error occurred on attempt %d/%d: %s",
+                    attempt + 1,
+                    MAX_RETRIES,
+                    str(err),
+                )
+            except Exception as err:
+                last_error = f"Unexpected error: {str(err)}"
+                _LOGGER.warning(
+                    "Error occurred on attempt %d/%d: %s",
+                    attempt + 1,
+                    MAX_RETRIES,
+                    str(err),
+                )
+
+            if attempt < MAX_RETRIES - 1:
+                await asyncio.sleep(RETRY_DELAY * (attempt + 1))
+
+        raise Exception(
+            f"Failed after {MAX_RETRIES} attempts. Last error: {last_error}"
+        )

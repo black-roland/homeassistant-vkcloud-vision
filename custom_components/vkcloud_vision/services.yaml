@@ -5,3 +5,16 @@ detect_objects:
       selector:
         text:
           multiple: true
+    modes:
+      required: false
+      selector:
+        select:
+          multiple: true
+          options:
+            - object
+            - object2
+            - scene
+            - car_number
+            - multiobject
+            - pedestrian
+            - selfie

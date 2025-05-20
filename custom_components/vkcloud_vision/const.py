@@ -11,5 +11,15 @@ LOGGER = logging.getLogger(__package__)
 
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
-
+CONF_MODES = "modes"
 ATTR_FILENAMES = "filenames"
+
+VALID_MODES = [
+    "object",
+    "object2",
+    "scene",
+    "car_number",
+    "multiobject",
+    "pedestrian",
+    "selfie",
+]
