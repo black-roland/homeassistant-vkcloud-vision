@@ -50,7 +50,7 @@ class BaseVKCloudVisionClient:
         # Prepare multipart form data
         data = FormData()
         for i, file_data in enumerate(files):
-            data.add_field(f"file_{i}", file_data, filename=f"image_{i}.jpg")
+            data.add_field(f"image_{i}.jpg", file_data, filename=f"image_{i}.jpg")
         data.add_field("meta", json.dumps(meta))
 
         url = f"{self._base_url}{endpoint}"

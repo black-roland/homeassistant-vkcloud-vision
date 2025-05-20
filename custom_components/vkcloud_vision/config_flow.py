@@ -32,6 +32,7 @@ class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
                 await auth.get_access_token()
 
                 # Store credentials and refresh token in the config entry
+                # TODO: Store refresh token instead of client_id and secret
                 data = {
                     CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
                     CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
@@ -43,7 +44,6 @@ class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             except Exception as e:
-                # TODO: Double-check if this is actually working
                 errors["base"] = "invalid_auth"
                 LOGGER.exception("Authentication error", exc_info=e)
 
