@@ -1,8 +1,8 @@
 {
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.autopep8"
+  },
   "python.analysis.typeCheckingMode": "basic",
-  "flake8.args": [
-    "--max-line-length=120",
-    "--ignore=E203,W503"
-  ],
+  "flake8.args": ["--max-line-length=120", "--ignore=E203,W503"],
   "autopep8.args": ["--max-line-length=120"]
 }
