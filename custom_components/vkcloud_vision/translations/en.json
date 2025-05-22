@@ -1,0 +1,33 @@
+{
+  "services": {
+    "detect_objects": {
+      "name": "Detect Objects",
+      "description": "Detect objects, scenes, or other features in images using VK Cloud Vision API.",
+      "fields": {
+        "filenames": {
+          "name": "Image Files",
+          "description": "Paths to the image files to analyze. Must be accessible by Home Assistant.",
+          "example": "/config/images/test1.jpg, /config/images/test2.jpg"
+        },
+        "modes": {
+          "name": "Detection Modes",
+          "description": "Select one or more detection modes to apply. Defaults to 'multiobject' if not specified.",
+          "example": "object2, scene"
+        }
+      }
+    }
+  },
+  "selector": {
+    "modes": {
+      "options": {
+        "multiobject": "Multiple Objects",
+        "car_number": "Car License Plate",
+        "object": "Objects (Version 1)",
+        "object2": "Objects (Version 2)",
+        "scene": "Scene",
+        "pedestrian": "Pedestrian",
+        "selfie": "Selfie"
+      }
+    }
+  }
+}

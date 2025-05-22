@@ -11,10 +11,10 @@ detect_objects:
         select:
           multiple: true
           options:
+            - multiobject
+            - car_number
             - object
             - object2
             - scene
-            - car_number
-            - multiobject
             - pedestrian
             - selfie
