@@ -13,16 +13,15 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .api.vkcloud.auth import VKCloudAuth
-from .api.vkcloud_vision_sdk import VKCloudVisionSDK
+from .api.vkcloud.vision import VKCloudVision
 from .const import (ATTR_FILENAMES, CONF_CLIENT_ID, CONF_MODES,
                     CONF_REFRESH_TOKEN, DOMAIN, VALID_MODES)
 
 PLATFORMS = []
 SERVICE_DETECT_OBJECTS = "detect_objects"
 
-type VKCloudVisionConfigEntry = ConfigEntry[VKCloudVisionSDK]
 
-
+# TODO: Draw boxes? https://github.com/search?q=repo%3Ahome-assistant%2Fcore%20draw_box&type=code
 async def async_setup(hass: HomeAssistant, entry: ConfigType) -> bool:
     """Set up the VK Cloud Vision integration."""
 
@@ -52,8 +51,8 @@ async def async_setup(hass: HomeAssistant, entry: ConfigType) -> bool:
             raise HomeAssistantError("No filenames provided")
 
         # Get the first loaded config entry
-        config_entry: VKCloudVisionConfigEntry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
-        sdk: VKCloudVisionSDK = config_entry.runtime_data
+        config_entry: ConfigEntry[VKCloudVision] = hass.config_entries.async_loaded_entries(DOMAIN)[0]
+        sdk: VKCloudVision = config_entry.runtime_data
 
         # Prepare metadata
         images_meta = [{"name": f"image_{i}.jpg"} for i in range(len(filenames))]
@@ -99,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     auth_client = VKCloudAuth(
         hass, client_id=entry.data[CONF_CLIENT_ID], refresh_token=entry.data[CONF_REFRESH_TOKEN])
-    sdk = VKCloudVisionSDK(hass, auth_client)
+    sdk = VKCloudVision(hass, auth_client)
     entry.runtime_data = sdk
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

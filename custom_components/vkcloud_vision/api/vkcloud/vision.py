@@ -4,11 +4,11 @@
 
 from homeassistant.core import HomeAssistant
 
-from .vkcloud_vision_clients import ObjectsClient
-from .vkcloud.auth import VKCloudAuth
+from .vision.clients import VKCloudVisionObjectsClient
+from .auth import VKCloudAuth
 
 
-class VKCloudVisionSDK:
+class VKCloudVision:
     """SDK for VK Cloud Vision API."""
 
     def __init__(
@@ -22,7 +22,7 @@ class VKCloudVisionSDK:
 
         # Initialize feature-specific clients
         # self.persons = PersonsClient(self._hass, self._auth, self._oauth_provider)
-        self.objects = ObjectsClient(self._hass, self._auth)
+        self.objects = VKCloudVisionObjectsClient(self._hass, self._auth)
         # self.docs = DocsClient(self._hass, self._auth, self._oauth_provider)
         # self.text = TextClient(self._hass, self._auth, self._oauth_provider)
         # self.photo = PhotoClient(self._hass, self._auth, self._oauth_provider)

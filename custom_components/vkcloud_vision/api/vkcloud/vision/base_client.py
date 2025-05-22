@@ -13,7 +13,7 @@ from aiohttp import ClientError, ClientSession, FormData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .vkcloud.auth import VKCloudAuth
+from ..auth import VKCloudAuth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ MAX_RETRIES = 3
 RETRY_DELAY = 1
 
 
-class BaseVKCloudVisionClient:
+class VKCloudVisionBaseClient:
     def __init__(
         self,
         hass: HomeAssistant,

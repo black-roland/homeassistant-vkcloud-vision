@@ -4,10 +4,10 @@
 
 from typing import Any, Dict, List
 
-from .base_client import BaseVKCloudVisionClient
+from .base_client import VKCloudVisionBaseClient
 
 
-class ObjectsClient(BaseVKCloudVisionClient):
+class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
     """Client for objects-related VK Cloud Vision API endpoints."""
 
     async def detect(
