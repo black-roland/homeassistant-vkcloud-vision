@@ -12,18 +12,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
-class VKCloudVisionAuth:
+class VKCloudAuth:
     def __init__(
         self,
         hass: HomeAssistant,
         client_id: str,
-        client_secret: str,
+        client_secret: Optional[str] = None,
         refresh_token: Optional[str] = None,
     ) -> None:
         """Initialize VK Cloud Vision authorization helper."""
         self._hass: HomeAssistant = hass
         self._client_id: str = client_id
-        self._client_secret: str = client_secret
+        self._client_secret: Optional[str] = client_secret
         self._refresh_token: Optional[str] = refresh_token
 
         self._session: ClientSession = async_get_clientsession(hass)
@@ -46,6 +46,9 @@ class VKCloudVisionAuth:
 
     async def _fetch_new_token(self) -> Optional[str]:
         """Fetch a new access token using client credentials."""
+        if not self._client_secret:
+            raise Exception("Client secret is missing, re-authentication required")
+
         headers = {
             "Content-Type": "application/json",
         }

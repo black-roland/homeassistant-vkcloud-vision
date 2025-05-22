@@ -13,7 +13,7 @@ from aiohttp import ClientError, ClientSession, FormData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .vkcloud_vision_auth import VKCloudVisionAuth
+from .vkcloud.auth import VKCloudAuth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class BaseVKCloudVisionClient:
     def __init__(
         self,
         hass: HomeAssistant,
-        auth: VKCloudVisionAuth,
+        auth: VKCloudAuth,
         base_url: str = "https://smarty.mail.ru/api",
     ) -> None:
         """Initialize the base client."""
@@ -103,6 +103,4 @@ class BaseVKCloudVisionClient:
             if attempt < MAX_RETRIES - 1:
                 await asyncio.sleep(RETRY_DELAY * (attempt + 1))
 
-        raise Exception(
-            f"Failed after {MAX_RETRIES} attempts. Last error: {last_error}"
-        )
+        raise Exception(f"Failed after {MAX_RETRIES} attempts. Last error: {last_error}")

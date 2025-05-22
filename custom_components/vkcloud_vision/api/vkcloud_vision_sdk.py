@@ -5,7 +5,7 @@
 from homeassistant.core import HomeAssistant
 
 from .vkcloud_vision_clients import ObjectsClient
-from .vkcloud_vision_auth import VKCloudVisionAuth
+from .vkcloud.auth import VKCloudAuth
 
 
 class VKCloudVisionSDK:
@@ -14,7 +14,7 @@ class VKCloudVisionSDK:
     def __init__(
         self,
         hass: HomeAssistant,
-        auth: VKCloudVisionAuth,
+        auth: VKCloudAuth,
     ) -> None:
         """Initialize the VK Cloud Vision SDK."""
         self._hass = hass

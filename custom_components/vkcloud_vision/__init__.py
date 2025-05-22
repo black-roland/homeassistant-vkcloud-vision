@@ -12,10 +12,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .api.vkcloud_vision_auth import VKCloudVisionAuth
+from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud_vision_sdk import VKCloudVisionSDK
-from .const import (ATTR_FILENAMES, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
-                    CONF_MODES, DOMAIN, VALID_MODES)
+from .const import (ATTR_FILENAMES, CONF_CLIENT_ID, CONF_MODES,
+                    CONF_REFRESH_TOKEN, DOMAIN, VALID_MODES)
 
 PLATFORMS = []
 SERVICE_DETECT_OBJECTS = "detect_objects"
@@ -97,9 +97,8 @@ async def async_setup(hass: HomeAssistant, entry: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    auth_client = VKCloudVisionAuth(
-        hass, entry.data[CONF_CLIENT_ID], entry.data[CONF_CLIENT_SECRET]
-    )
+    auth_client = VKCloudAuth(
+        hass, client_id=entry.data[CONF_CLIENT_ID], refresh_token=entry.data[CONF_REFRESH_TOKEN])
     sdk = VKCloudVisionSDK(hass, auth_client)
     entry.runtime_data = sdk
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
