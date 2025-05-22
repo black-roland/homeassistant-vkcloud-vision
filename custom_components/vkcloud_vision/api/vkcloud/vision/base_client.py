@@ -9,7 +9,7 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from aiohttp import ClientError, ClientSession, FormData
+from aiohttp import ClientSession, ClientTimeout, FormData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -47,7 +47,8 @@ class VKCloudVisionBaseClient:
         if not access_token:
             raise Exception("Failed to obtain access token")
 
-        # Prepare query parameters
+        url = f"{self._base_url}{endpoint}"
+
         query_params = {
             "oauth_token": access_token,
             "oauth_provider": "mcs",
@@ -55,52 +56,61 @@ class VKCloudVisionBaseClient:
         if params:
             query_params.update(params)
 
-        # Prepare multipart form data
+        data = self._prepare_form_data(files, meta)
+
+        return await self._execute_request_with_retries(url, query_params, data)
+
+    def _prepare_form_data(
+        self,
+        files: List[bytes],
+        meta: Dict[str, Any]
+    ) -> FormData:
+        """Prepare multipart form data for the request."""
         data = FormData()
         for i, file_data in enumerate(files):
             data.add_field(f"image_{i}.jpg", file_data, filename=f"image_{i}.jpg")
         data.add_field("meta", json.dumps(meta))
+        return data
 
-        url = f"{self._base_url}{endpoint}"
-        last_error = None
+    async def _execute_request(
+        self,
+        url: str,
+        query_params: Dict[str, Any],
+        data: FormData
+    ) -> Dict[str, Any]:
+        """Execute single request attempt."""
+        async with self._session.post(
+            url,
+            params=query_params,
+            data=data,
+            timeout=ClientTimeout(total=DEFAULT_TIMEOUT),
+        ) as response:
+            if response.status >= 502 and response.status <= 504:
+                raise TimeoutError()
 
+            if response.status >= 400:
+                raise Exception(f"API error: {response.status}")
+
+            result = await response.json()
+            if result.get("status") != 200:
+                raise Exception(f"API error: {result.get('body')}")
+
+            return result
+
+    async def _execute_request_with_retries(
+        self,
+        url: str,
+        query_params: Dict[str, Any],
+        data: FormData
+    ) -> Dict[str, Any]:
+        """Execute request with retry logic."""
         for attempt in range(MAX_RETRIES):
             try:
-                async with asyncio.timeout(DEFAULT_TIMEOUT):
-                    async with self._session.post(
-                        url,
-                        params=query_params,
-                        data=data,
-                        raise_for_status=True,
-                    ) as response:
-                        result = await response.json()
-                        if result.get("status") != 200:
-                            raise Exception(f"API error: {result.get('body')}")
-                        return result
-
-            except asyncio.TimeoutError:
-                last_error = f"Request timed out after {DEFAULT_TIMEOUT} seconds"
-                _LOGGER.warning(
-                    "Timeout occurred on attempt %d/%d", attempt + 1, MAX_RETRIES
-                )
-            except ClientError as err:
-                last_error = f"Client error: {str(err)}"
-                _LOGGER.warning(
-                    "Client error occurred on attempt %d/%d: %s",
-                    attempt + 1,
-                    MAX_RETRIES,
-                    str(err),
-                )
-            except Exception as err:
-                last_error = f"Unexpected error: {str(err)}"
-                _LOGGER.warning(
-                    "Error occurred on attempt %d/%d: %s",
-                    attempt + 1,
-                    MAX_RETRIES,
-                    str(err),
-                )
+                return await self._execute_request(url, query_params, data)
+            except TimeoutError:
+                _LOGGER.warning("Timeout occurred on attempt %d/%d", attempt + 1, MAX_RETRIES)
 
             if attempt < MAX_RETRIES - 1:
                 await asyncio.sleep(RETRY_DELAY * (attempt + 1))
 
-        raise Exception(f"Failed after {MAX_RETRIES} attempts. Last error: {last_error}")
+        raise Exception(f"Failed after {MAX_RETRIES} attempts")

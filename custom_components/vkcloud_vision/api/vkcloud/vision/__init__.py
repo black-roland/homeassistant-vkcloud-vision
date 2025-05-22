@@ -4,8 +4,8 @@
 
 from homeassistant.core import HomeAssistant
 
-from .vision.clients import VKCloudVisionObjectsClient
-from .auth import VKCloudAuth
+from .clients import VKCloudVisionObjectsClient
+from ..auth import VKCloudAuth
 
 
 class VKCloudVision:
