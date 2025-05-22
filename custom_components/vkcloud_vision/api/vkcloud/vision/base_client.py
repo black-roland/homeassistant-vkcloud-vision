@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from ..auth import VKCloudAuth
+from ..exceptions import VKCloudVisionAPIError, VKCloudVisionAuthError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class VKCloudVisionBaseClient:
         """Make an API request with multipart/form-data."""
         access_token = await self._auth.get_access_token()
         if not access_token:
-            raise Exception("Failed to obtain access token")
+            raise VKCloudVisionAuthError("Failed to obtain access token")
 
         url = f"{self._base_url}{endpoint}"
 
@@ -85,15 +86,39 @@ class VKCloudVisionBaseClient:
             data=data,
             timeout=ClientTimeout(total=DEFAULT_TIMEOUT),
         ) as response:
+            # Handle HTTP status codes
             if response.status >= 502 and response.status <= 504:
-                raise TimeoutError()
+                _LOGGER.warning("Received HTTP %d, retrying", response.status)
+                raise TimeoutError("Server timeout or gateway error")
 
             if response.status >= 400:
-                raise Exception(f"API error: {response.status}")
+                error_text = await response.text()
+                raise VKCloudVisionAPIError(
+                    message=f"API error: HTTP {response.status}",
+                    http_status=response.status,
+                    error_details=error_text,
+                )
 
-            result = await response.json()
-            if result.get("status") != 200:
-                raise Exception(f"API error: {result.get('body')}")
+            # Parse JSON response
+            try:
+                result = await response.json()
+            except ValueError as err:
+                raise VKCloudVisionAPIError(
+                    message="Invalid JSON response",
+                    http_status=response.status,
+                    error_details=str(err),
+                )
+
+            # Check API status
+            api_status = result.get("status")
+            if api_status != 200:
+                error_details = result.get("body", "No error details provided")
+                raise VKCloudVisionAPIError(
+                    message="API returned non-200 status",
+                    http_status=response.status,
+                    api_status=api_status,
+                    error_details=error_details,
+                )
 
             return result
 
@@ -110,7 +135,10 @@ class VKCloudVisionBaseClient:
             except TimeoutError:
                 _LOGGER.warning("Timeout occurred on attempt %d/%d", attempt + 1, MAX_RETRIES)
 
-            if attempt < MAX_RETRIES - 1:
-                await asyncio.sleep(RETRY_DELAY * (attempt + 1))
+            # Exponential backoff
+            await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
 
-        raise Exception(f"Failed after {MAX_RETRIES} attempts")
+        raise VKCloudVisionAPIError(
+            message=f"Failed after {MAX_RETRIES} attempts",
+            error_details="Unknown error"
+        )
