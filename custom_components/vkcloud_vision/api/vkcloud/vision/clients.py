@@ -12,13 +12,13 @@ class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
 
     async def detect(
         self,
+        files: List[bytes],
         modes: List[str],
-        images_meta: List[Dict[str, str]],
-        images: List[bytes],
+        images: List[Dict[str, str]],
     ) -> Dict[str, Any]:
         """Detect objects in a photo."""
         meta = {
             "mode": modes,  # e.g., ["object", "object2", "scene"]
-            "images": images_meta,  # Expected format: [{"name": str}]
+            "images": images,  # Expected format: [{"name": str}]
         }
-        return await self._make_request("/v1/objects/detect", images, meta)
+        return await self._make_request("/v1/objects/detect", files, meta)

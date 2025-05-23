@@ -66,10 +66,25 @@ class VKCloudVisionBaseClient:
         files: List[bytes],
         meta: Dict[str, Any]
     ) -> FormData:
-        """Prepare multipart form data for the request."""
+        """Prepare multipart form data for the request using file names from meta."""
+        if "images" not in meta or not isinstance(meta["images"], list):
+            raise ValueError("meta must contain 'images' key with a list")
+
+        images = meta["images"]
+        if len(files) != len(images):
+            raise ValueError("Number of files must match number of images in meta")
+
+        names = [img.get("name") for img in images]
+        if any(name is None for name in names):
+            raise ValueError("All images in meta must have a 'name' key")
+
+        if len(set(names)) != len(names):
+            raise ValueError("All image names in meta must be unique")
+
         data = FormData()
-        for i, file_data in enumerate(files):
-            data.add_field(f"image_{i}.jpg", file_data, filename=f"image_{i}.jpg")
+        for file_data, name in zip(files, names):
+            data.add_field(name, file_data, filename=name)
+
         data.add_field("meta", json.dumps(meta))
         return data
 
@@ -120,7 +135,7 @@ class VKCloudVisionBaseClient:
                     error_details=error_details,
                 )
 
-            return result
+            return result.get("body")
 
     async def _execute_request_with_retries(
         self,
