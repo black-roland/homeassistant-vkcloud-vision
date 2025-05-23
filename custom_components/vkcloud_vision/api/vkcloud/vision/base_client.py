@@ -57,9 +57,7 @@ class VKCloudVisionBaseClient:
         if params:
             query_params.update(params)
 
-        data = self._prepare_form_data(files, meta)
-
-        return await self._execute_request_with_retries(url, query_params, data)
+        return await self._execute_request_with_retries(url, query_params, files, meta)
 
     def _prepare_form_data(
         self,
@@ -141,10 +139,12 @@ class VKCloudVisionBaseClient:
         self,
         url: str,
         query_params: Dict[str, Any],
-        data: FormData
+        files: List[bytes],
+        meta: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Execute request with retry logic."""
         for attempt in range(MAX_RETRIES):
+            data = self._prepare_form_data(files, meta)
             try:
                 return await self._execute_request(url, query_params, data)
             except TimeoutError:
