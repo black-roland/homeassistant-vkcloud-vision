@@ -84,18 +84,19 @@ class VKCloudVisionEntity(ImageProcessingEntity):
             images.append({"name": split_entity_id(camera_id)[1]})
 
         try:
-            result = await client.objects.detect(files=files, modes=modes, images=images)
+            response = await client.objects.detect(files=files, modes=modes, images=images)
         except Exception as err:
             raise HomeAssistantError(f"Error detecting objects: {err}") from err
 
         # Draw bounding boxes if output path specified
+        output_path = None
         if file_out:
             for i, camera_id in enumerate(camera_ids):
                 image_name = split_entity_id(camera_id)[1]
                 labels = []
                 # Collect all labels for this image from all modes
                 for label_type in ["object_labels", "multiobject_labels"]:
-                    for img_result in result.get(label_type, []):
+                    for img_result in response.get(label_type, []):
                         if img_result["name"] == image_name:
                             labels.extend(img_result["labels"])
 
@@ -106,7 +107,10 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         self._last_detection = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
 
-        return result
+        return {
+            "response": response,
+            "file_out": output_path,
+        }
 
     async def _save_image(
         self,
