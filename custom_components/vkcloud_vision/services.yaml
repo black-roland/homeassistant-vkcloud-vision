@@ -16,3 +16,8 @@ detect_objects:
             - scene
             - pedestrian
             - selfie
+    file_out:
+      required: false
+      example: "/config/www/camera_latest.jpg"
+      selector:
+        template:

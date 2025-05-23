@@ -19,8 +19,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (ATTR_MODES, CONF_CLIENT_ID, CONF_REFRESH_TOKEN, DOMAIN,
-                    VALID_MODES)
+from .const import (ATTR_FILE_OUT, ATTR_MODES, CONF_CLIENT_ID,
+                    CONF_REFRESH_TOKEN, DOMAIN, VALID_MODES)
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
@@ -49,7 +49,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return await vision_entity.async_detect_objects(
             config_entry,
             call.data.get("entity_id", []),
-            call.data.get(ATTR_MODES, ["multiobject"])
+            call.data.get(ATTR_MODES, ["multiobject"]),
+            call.data.get(ATTR_FILE_OUT),
         )
 
     hass.services.async_register(
@@ -58,6 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         detect_objects,
         schema=cv.make_entity_service_schema({
             vol.Optional(ATTR_MODES, default=["multiobject"]): vol.All(cv.ensure_list, [vol.In(VALID_MODES)]),
+            vol.Optional(ATTR_FILE_OUT): cv.template,
         }),
         supports_response=SupportsResponse.ONLY,
     )
