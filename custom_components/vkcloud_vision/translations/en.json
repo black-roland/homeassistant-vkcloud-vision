@@ -2,17 +2,19 @@
   "services": {
     "detect_objects": {
       "name": "Detect Objects",
-      "description": "Detect objects, scenes, or other features in images using VK Cloud Vision API.",
+      "description": "Detect objects, scenes, or other features in images using VK Cloud Vision API and optionally save processed images with bounding boxes.",
       "fields": {
-        "filenames": {
-          "name": "Image Files",
-          "description": "Paths to the image files to analyze. Must be accessible by Home Assistant.",
-          "example": "/config/images/test1.jpg, /config/images/test2.jpg"
-        },
         "modes": {
           "name": "Detection Modes",
-          "description": "Select one or more detection modes to apply. Defaults to 'multiobject' if not specified.",
-          "example": "object2, scene"
+          "description": "Select one or more detection modes to apply. Defaults to \"multiobject\" if not specified."
+        },
+        "file_out": {
+          "name": "Output File Path",
+          "description": "Template for path to save processed image with bounding boxes."
+        },
+        "entity_id": {
+          "name": "Camera Entity",
+          "description": "Camera entity to capture image from for object detection."
         }
       }
     }
@@ -20,12 +22,12 @@
   "selector": {
     "modes": {
       "options": {
-        "multiobject": "Multiple Objects",
-        "car_number": "Car License Plate",
-        "object": "Objects (Version 1)",
-        "object2": "Objects (Version 2)",
+        "multiobject": "Multi-objects",
+        "car_number": "Car license plates",
+        "object": "Objects (version 1)",
+        "object2": "Objects (version 2)",
         "scene": "Scene",
-        "pedestrian": "Pedestrian",
+        "pedestrian": "People",
         "selfie": "Selfie"
       }
     }

@@ -1,0 +1,7 @@
+{
+  "services": {
+    "detect_objects": {
+      "service": "mdi:qrcode-scan"
+    }
+  }
+}

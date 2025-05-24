@@ -16,8 +16,14 @@ detect_objects:
             - scene
             - pedestrian
             - selfie
+          translation_key: modes
     file_out:
       required: false
-      example: "/config/www/camera_latest.jpg"
+      example: "/config/www/camera_snapshot.jpg"
       selector:
         template:
+    # config_entry_id:
+    #   required: true
+    #   selector:
+    #     config_entry:
+    #       integration: vkcloud_vision
