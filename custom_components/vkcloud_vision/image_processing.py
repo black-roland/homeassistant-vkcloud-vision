@@ -97,9 +97,13 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         output_path = None
         if file_out:
             try:
-                output_path = file_out.async_render(variables={"camera_entity": camera_id})
                 labels = self._extract_labels(response, image_name)
-                await self._save_image(image_data, labels, output_path)
+                output_path = await self.hass.async_add_executor_job(
+                    self._save_image,
+                    image_data,
+                    labels,
+                    file_out.async_render(variables={"camera_entity": camera_id})
+                )
             except Exception as err:
                 LOGGER.error("Image processing failed: %s", err)
 
@@ -120,12 +124,12 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                     labels.extend(cast(JsonArrayType, img_result["labels"]))
         return labels
 
-    async def _save_image(
+    def _save_image(
         self,
         image_data: bytes,
         labels: list[dict[str, Any]],
         output_path: str
-    ) -> None:
+    ) -> str:
         """Draw bounding boxes and save image."""
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
         draw = ImageDraw.Draw(image)
@@ -146,3 +150,5 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         image.save(output_path)
         LOGGER.debug("Image saved: %s", output_path)
+
+        return output_path
