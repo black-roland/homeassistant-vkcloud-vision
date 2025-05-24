@@ -11,13 +11,15 @@ import os
 from typing import Any, Optional
 
 from homeassistant.components.camera import async_get_image
+from homeassistant.components.image_processing import \
+    DOMAIN as IMAGE_PROCESSING_DOMAIN
 from homeassistant.components.image_processing import ImageProcessingEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
@@ -41,13 +43,16 @@ def setup_platform(
 class VKCloudVisionEntity(ImageProcessingEntity):
     """VK Cloud Vision image processing entity."""
 
+    entity_id = f"{IMAGE_PROCESSING_DOMAIN}.vkcloud_vision"
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self) -> None:
         """Initialize the entity."""
         self._attr_name = "VK Cloud Vision"
+        self._attr_unique_id = "vkcloud_vision"
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, self._attr_name)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             name="VK Cloud Vision",
             manufacturer="VK Cloud",
             model="Vision",
@@ -97,7 +102,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 # Collect all labels for this image from all modes
                 for label_type in ["object_labels", "multiobject_labels"]:
                     for img_result in response.get(label_type, []):
-                        if img_result["name"] == image_name:
+                        if img_result["name"] == image_name and "labels" in img_result:
                             labels.extend(img_result["labels"])
 
                 if labels:
