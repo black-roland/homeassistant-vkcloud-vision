@@ -9,8 +9,8 @@ from functools import cache
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import (HomeAssistant, ServiceCall, ServiceResponse,
-                                SupportsResponse)
+from homeassistant.core import (EntityServiceResponse, HomeAssistant,
+                                ServiceCall, SupportsResponse)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -37,21 +37,28 @@ def get_vision_entity(hass: HomeAssistant) -> VKCloudVisionEntity:
     raise HomeAssistantError("VK Cloud Vision entity is not setup yet")
 
 
+# FIXME: Warning: G] [CONFIG_SCHEMA] Integrations which implement 'async_setup' or 'setup'
+# must define either 'CONFIG_SCHEMA', 'PLATFORM_SCHEMA' or 'PLATFORM_SCHEMA_BASE'.
+# If the integration has no configuration parameters, can only be set up from platforms
+# or can only be set up from config entries, one of the helpers cv.empty_config_schema,
+# cv.platform_only_config_schema or cv.config_entry_only_config_schema can be used.
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the VK Cloud Vision integration."""
     for platform in PLATFORMS:
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
-    async def detect_objects(call: ServiceCall) -> ServiceResponse:
+    async def detect_objects(call: ServiceCall) -> EntityServiceResponse:
         """Detect objects in an image."""
-        config_entry: ConfigEntry[VKCloudVision] = hass.config_entries.async_loaded_entries(DOMAIN)[0]
         vision_entity = get_vision_entity(hass)
-        return await vision_entity.async_detect_objects(
-            config_entry,
-            call.data.get("entity_id", []),
-            call.data.get(ATTR_MODES, ["multiobject"]),
-            call.data.get(ATTR_FILE_OUT),
-        )
+
+        # FIXME: Workaround to process multiple entities in a way `entity_service_call` does
+        result = {}
+        for camera_id in call.data.get("entity_id", []):
+            result[camera_id] = await vision_entity.async_detect_objects(
+                camera_id, call.data.get(ATTR_MODES, ["multiobject"]), call.data.get(ATTR_FILE_OUT)
+            )
+
+        return result
 
     hass.services.async_register(
         DOMAIN,

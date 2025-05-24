@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 from aiohttp import ClientSession, ClientTimeout, FormData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.json import JsonObjectType
 
 from ..auth import VKCloudAuth
 from ..exceptions import VKCloudVisionAPIError, VKCloudVisionAuthError
@@ -42,7 +43,7 @@ class VKCloudVisionBaseClient:
         files: List[bytes],
         meta: Dict[str, Any],
         params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+    ) -> JsonObjectType:
         """Make an API request with multipart/form-data."""
         access_token = await self._auth.get_access_token()
         if not access_token:
@@ -91,7 +92,7 @@ class VKCloudVisionBaseClient:
         url: str,
         query_params: Dict[str, Any],
         data: FormData
-    ) -> Dict[str, Any]:
+    ) -> JsonObjectType:
         """Execute single request attempt."""
         async with self._session.post(
             url,

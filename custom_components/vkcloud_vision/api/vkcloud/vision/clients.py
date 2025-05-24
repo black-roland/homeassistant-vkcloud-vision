@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from typing import Any, Dict, List
+from typing import Dict, List
+
+from homeassistant.util.json import JsonObjectType
 
 from .base_client import VKCloudVisionBaseClient
 
@@ -15,7 +17,7 @@ class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
         files: List[bytes],
         modes: List[str],
         images: List[Dict[str, str]],
-    ) -> Dict[str, Any]:
+    ) -> JsonObjectType:
         """Detect objects in a photo."""
         meta = {
             "mode": modes,  # e.g., ["object", "object2", "scene"]
