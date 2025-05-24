@@ -9,5 +9,6 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/black-roland/homeassistant-vkcloud-vision/issues",
   "loggers": ["vkcloud_vision"],
+  "requirements": ["Pillow>=11.2.1"],
   "version": "0.1.0"
 }
