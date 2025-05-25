@@ -4,8 +4,8 @@
 
 from homeassistant.core import HomeAssistant
 
-from .clients import VKCloudVisionObjectsClient
 from ..auth import VKCloudAuth
+from .clients import VKCloudVisionObjectsClient, VKCloudVisionTextClient
 
 
 class VKCloudVision:
@@ -24,6 +24,6 @@ class VKCloudVision:
         # self.persons = PersonsClient(self._hass, self._auth, self._oauth_provider)
         self.objects = VKCloudVisionObjectsClient(self._hass, self._auth)
         # self.docs = DocsClient(self._hass, self._auth, self._oauth_provider)
-        # self.text = TextClient(self._hass, self._auth, self._oauth_provider)
+        self.text = VKCloudVisionTextClient(self._hass, self._auth)
         # self.photo = PhotoClient(self._hass, self._auth, self._oauth_provider)
         # self.adult = AdultClient(self._hass, self._auth, self._oauth_provider)

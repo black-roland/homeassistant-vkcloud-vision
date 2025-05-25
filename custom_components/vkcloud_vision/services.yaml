@@ -27,3 +27,12 @@ detect_objects:
     #   selector:
     #     config_entry:
     #       integration: vkcloud_vision
+recognize_text:
+  target:
+    entity:
+      domain: camera
+  fields:
+    detailed:
+      required: false
+      selector:
+        boolean:

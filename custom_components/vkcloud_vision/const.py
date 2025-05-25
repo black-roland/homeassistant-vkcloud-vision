@@ -15,6 +15,7 @@ CONF_REFRESH_TOKEN = "refresh_token"
 
 ATTR_MODES = "modes"
 ATTR_FILE_OUT = "file_out"
+ATTR_DETAILED = "detailed"
 
 VALID_MODES = [
     "object",

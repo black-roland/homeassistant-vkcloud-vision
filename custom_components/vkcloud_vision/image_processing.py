@@ -115,6 +115,27 @@ class VKCloudVisionEntity(ImageProcessingEntity):
             "file_out": output_path,
         }
 
+    async def recognize_text(self, camera_id: str, mode: Optional[str]) -> JsonObjectType:
+        entry: ConfigEntry[VKCloudVision] = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
+        client: VKCloudVision = entry.runtime_data
+
+        camera_image = await async_get_image(self.hass, camera_id)
+        image_data = camera_image.content
+        image_name = split_entity_id(camera_id)[1]
+
+        try:
+            response = await client.text.recognize(
+                files=[image_data],
+                images=[{"name": image_name}],
+                mode=mode
+            )
+        except Exception as err:
+            raise HomeAssistantError(f"Detection error: {err}") from err
+
+        return {
+            "response": response,
+        }
+
     def _extract_labels(self, response: JsonObjectType, image_name: str) -> list[JsonObjectType]:
         """Extract labels from API response for specific image."""
         labels = []

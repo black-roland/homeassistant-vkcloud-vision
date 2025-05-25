@@ -2,6 +2,9 @@
   "services": {
     "detect_objects": {
       "service": "mdi:qrcode-scan"
+    },
+    "recognize_text": {
+      "service": "mdi:text-box-search-outline"
     }
   }
 }

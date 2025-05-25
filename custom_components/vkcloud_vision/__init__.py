@@ -19,12 +19,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (ATTR_FILE_OUT, ATTR_MODES, CONF_CLIENT_ID,
+from .const import (ATTR_DETAILED, ATTR_FILE_OUT, ATTR_MODES, CONF_CLIENT_ID,
                     CONF_REFRESH_TOKEN, DOMAIN, VALID_MODES)
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
+
 SERVICE_DETECT_OBJECTS = "detect_objects"
+SERVICE_RECOGNIZE_TEXT = "recognize_text"
 
 
 @cache
@@ -58,6 +60,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 camera_id, call.data.get(ATTR_MODES, ["multiobject"]), call.data.get(ATTR_FILE_OUT)
             )
 
+        # TODO: Catch exceptions an return them as part of the result
+        # in a way similar to `conversation.process`
         return result
 
     hass.services.async_register(
@@ -67,6 +71,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=cv.make_entity_service_schema({
             vol.Optional(ATTR_MODES, default=["multiobject"]): vol.All(cv.ensure_list, [vol.In(VALID_MODES)]),
             vol.Optional(ATTR_FILE_OUT): cv.template,
+            # TODO: Number of snapshots option
+        }),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async def recognize_text(call: ServiceCall) -> EntityServiceResponse:
+        """Recognize text in a scene."""
+        vision_entity = get_vision_entity(hass)
+
+        mode = "detailed" if call.data.get(ATTR_DETAILED) else None
+
+        # FIXME: Workaround to process multiple entities in a way `entity_service_call` does
+        result = {}
+        for camera_id in call.data.get("entity_id", []):
+            result[camera_id] = await vision_entity.recognize_text(camera_id, mode)
+
+        # TODO: Catch exceptions an return them as part of the result
+        # in a way similar to `conversation.process`
+        return result
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RECOGNIZE_TEXT,
+        recognize_text,
+        schema=cv.make_entity_service_schema({
+            vol.Optional(ATTR_DETAILED): bool,
+            # TODO: Number of snapshots option
         }),
         supports_response=SupportsResponse.ONLY,
     )

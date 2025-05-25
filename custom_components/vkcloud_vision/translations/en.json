@@ -1,4 +1,16 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "VK Cloud Vision Authentication",
+        "description": "Enter your VK Cloud Vision API credentials.",
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client secret"
+        }
+      }
+    }
+  },
   "services": {
     "detect_objects": {
       "name": "Detect Objects",
@@ -11,10 +23,16 @@
         "file_out": {
           "name": "Output File Path",
           "description": "Template for path to save processed image with bounding boxes."
-        },
-        "entity_id": {
-          "name": "Camera Entity",
-          "description": "Camera entity to capture image from for object detection."
+        }
+      }
+    },
+    "recognize_text": {
+      "name": "Recognize Text",
+      "description": "Recognize text in images using VK Cloud Vision API.",
+      "fields": {
+        "detailed": {
+          "name": "Detailed Results",
+          "description": "Return detailed recognition results with coordinates and confidence scores."
         }
       }
     }
