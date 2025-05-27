@@ -5,6 +5,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import logging
+from enum import StrEnum
 
 DOMAIN = "vkcloud_vision"
 LOGGER = logging.getLogger(__package__)
@@ -26,3 +27,10 @@ VALID_MODES = [
     "pedestrian",
     "selfie",
 ]
+
+
+class ResponseType(StrEnum):
+    """Response types for VK Cloud Vision services."""
+    ACTION_DONE = "action_done"
+    ERROR = "error"
+    PARTIAL_ACTION_DONE = "partial_action_done"

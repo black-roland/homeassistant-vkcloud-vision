@@ -30,7 +30,7 @@ class VKCloudVisionAPIError(Exception):
         if self.api_status is not None:
             parts.append(f"API Status: {self.api_status}")
         if self.error_details:
-            parts.append(f"Details: {self.error_details}")
+            parts.append(f"details: {self.error_details}")
         return ", ".join(parts)
 
 

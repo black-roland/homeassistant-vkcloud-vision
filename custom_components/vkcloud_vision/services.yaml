@@ -4,6 +4,7 @@ detect_objects:
       domain: camera
   fields:
     modes:
+      default: ["multiobject"]
       required: false
       selector:
         select:
@@ -19,7 +20,7 @@ detect_objects:
           translation_key: modes
     file_out:
       required: false
-      example: "/config/www/camera_snapshot.jpg"
+      example: "/config/www/vision_snapshot.jpg"
       selector:
         template:
     # config_entry_id:
@@ -33,6 +34,7 @@ recognize_text:
       domain: camera
   fields:
     detailed:
+      default: false
       required: false
       selector:
         boolean:

@@ -9,26 +9,24 @@ from __future__ import annotations
 import asyncio
 import io
 import os
-from typing import Any, Optional, cast
+from typing import Any
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.components.image_processing import \
     DOMAIN as IMAGE_PROCESSING_DOMAIN
 from homeassistant.components.image_processing import ImageProcessingEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonArrayType, JsonObjectType
+from homeassistant.util.json import JsonObjectType
 from homeassistant.util.pil import draw_box
 from PIL import Image, ImageDraw
 
 from .api.vkcloud.vision import VKCloudVision
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, ResponseType
 
 DEFAULT_IMAGE_TIMEOUT = 10
 MAX_IMAGE_RETRIES = 3
@@ -77,13 +75,10 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         self.process_image(image)
 
     async def async_detect_objects(
-        self,
-        camera_id: str,
-        modes: list[str],
-        file_out: Optional[Template] = None
+        self, camera_id: str, modes: list[str], file_out: str | None
     ) -> JsonObjectType:
         """Detect objects with optional bounding box drawing."""
-        entry: ConfigEntry[VKCloudVision] = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
+        entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
 
         image_data = await self._async_get_image(camera_id)
@@ -93,7 +88,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
             response = await client.objects.detect(
                 files=[image_data],
                 modes=modes,
-                images=[{"name": image_name}]
+                images=[{"name": image_name}],
             )
         except Exception as err:
             raise HomeAssistantError(f"Detection error: {err}") from err
@@ -101,26 +96,26 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         output_path = None
         if file_out:
             try:
-                labels = self._extract_labels(response, image_name)
                 output_path = await self.hass.async_add_executor_job(
-                    self._save_image,
-                    image_data,
-                    labels,
-                    file_out.async_render(variables={"camera_entity": camera_id})
+                    self._save_image, image_data, response.labels, file_out
                 )
             except Exception as err:
                 LOGGER.error("Image processing failed: %s", err)
+                raise HomeAssistantError(f"Image processing failed: {err}") from err
 
         self._last_detection = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
 
         return {
-            "response": response,
+            "response": response.raw_response,
             "file_out": output_path,
+            "response_type": ResponseType.PARTIAL_ACTION_DONE if response.has_errors else ResponseType.ACTION_DONE,
+            "error": response.error_message,
         }
 
-    async def recognize_text(self, camera_id: str, mode: Optional[str]) -> JsonObjectType:
-        entry: ConfigEntry[VKCloudVision] = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
+    async def recognize_text(self, camera_id: str, mode: str | None) -> JsonObjectType:
+        """Recognize text in an image."""
+        entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
 
         image_data = await self._async_get_image(camera_id)
@@ -130,13 +125,18 @@ class VKCloudVisionEntity(ImageProcessingEntity):
             response = await client.text.recognize(
                 files=[image_data],
                 images=[{"name": image_name}],
-                mode=mode
+                mode=mode,
             )
         except Exception as err:
-            raise HomeAssistantError(f"Detection error: {err}") from err
+            raise HomeAssistantError(f"Text recognition error: {err}") from err
+
+        self._last_detection = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
 
         return {
-            "response": response,
+            "response": response.raw_response,
+            "response_type": ResponseType.PARTIAL_ACTION_DONE if response.has_errors else ResponseType.ACTION_DONE,
+            "error": response.error_message,
         }
 
     async def _async_get_image(self, camera_id: str) -> bytes:
@@ -153,28 +153,15 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                                camera_id, attempt + 1, MAX_IMAGE_RETRIES, last_error)
 
                 if attempt < MAX_IMAGE_RETRIES - 1:
-                    await asyncio.sleep(RETRY_IMAGE_DELAY * (attempt + 1))
+                    await asyncio.sleep(RETRY_IMAGE_DELAY * (2 ** attempt))
 
         raise HomeAssistantError(
             f"Failed to get image from {camera_id} after {MAX_IMAGE_RETRIES} attempts. Last error: {last_error}")
 
-    def _extract_labels(self, response: JsonObjectType, image_name: str) -> list[JsonObjectType]:
-        """Extract labels from API response for specific image."""
-        labels = []
-        for label_type in ["multiobject_labels", "object_labels"]:
-            for img_result in cast(list[JsonObjectType], response.get(label_type, [])):
-                if img_result.get("name") == image_name and "labels" in img_result:
-                    labels.extend(cast(JsonArrayType, img_result["labels"]))
-        return labels
-
-    def _save_image(
-        self,
-        image_data: bytes,
-        labels: list[dict[str, Any]],
-        output_path: str
-    ) -> str:
-        """Draw bounding boxes and save image."""
+    def _save_image(self, image_data: bytes, labels: list[dict[str, Any]], output_path: str) -> str:
+        """Draw bounding boxes with labels and save image."""
         image = Image.open(io.BytesIO(image_data)).convert("RGB")
+
         draw = ImageDraw.Draw(image)
         img_width, img_height = image.size
 

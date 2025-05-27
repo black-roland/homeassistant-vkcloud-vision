@@ -61,9 +61,7 @@ class VKCloudVisionBaseClient:
         return await self._execute_request_with_retries(url, query_params, files, meta)
 
     def _prepare_form_data(
-        self,
-        files: List[bytes],
-        meta: Dict[str, Any]
+        self, files: List[bytes], meta: Dict[str, Any]
     ) -> FormData:
         """Prepare multipart form data for the request using file names from meta."""
         if "images" not in meta or not isinstance(meta["images"], list):
@@ -88,10 +86,7 @@ class VKCloudVisionBaseClient:
         return data
 
     async def _execute_request(
-        self,
-        url: str,
-        query_params: Dict[str, Any],
-        data: FormData
+        self, url: str, query_params: Dict[str, Any], data: FormData
     ) -> JsonObjectType:
         """Execute single request attempt."""
         async with self._session.post(
@@ -137,11 +132,7 @@ class VKCloudVisionBaseClient:
             return result.get("body")
 
     async def _execute_request_with_retries(
-        self,
-        url: str,
-        query_params: Dict[str, Any],
-        files: List[bytes],
-        meta: Dict[str, Any]
+        self, url: str, query_params: Dict[str, Any], files: List[bytes], meta: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Execute request with retry logic."""
         for attempt in range(MAX_RETRIES):
@@ -156,5 +147,5 @@ class VKCloudVisionBaseClient:
 
         raise VKCloudVisionAPIError(
             message=f"Failed after {MAX_RETRIES} attempts",
-            error_details="Unknown error"
+            error_details="Unknown error",
         )
