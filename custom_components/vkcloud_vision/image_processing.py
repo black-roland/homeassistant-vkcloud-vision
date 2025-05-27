@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import io
 import os
 from typing import Any, Optional, cast
@@ -28,6 +29,10 @@ from PIL import Image, ImageDraw
 
 from .api.vkcloud.vision import VKCloudVision
 from .const import DOMAIN, LOGGER
+
+DEFAULT_IMAGE_TIMEOUT = 10
+MAX_IMAGE_RETRIES = 3
+RETRY_IMAGE_DELAY = 1
 
 
 def setup_platform(
@@ -81,8 +86,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         entry: ConfigEntry[VKCloudVision] = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
 
-        camera_image = await async_get_image(self.hass, camera_id)
-        image_data = camera_image.content
+        image_data = await self._async_get_image(camera_id)
         image_name = split_entity_id(camera_id)[1]
 
         try:
@@ -119,8 +123,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         entry: ConfigEntry[VKCloudVision] = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
 
-        camera_image = await async_get_image(self.hass, camera_id)
-        image_data = camera_image.content
+        image_data = await self._async_get_image(camera_id)
         image_name = split_entity_id(camera_id)[1]
 
         try:
@@ -135,6 +138,25 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         return {
             "response": response,
         }
+
+    async def _async_get_image(self, camera_id: str) -> bytes:
+        """Get image from camera with retry logic."""
+        last_error = None
+
+        for attempt in range(MAX_IMAGE_RETRIES):
+            try:
+                camera_image = await async_get_image(self.hass, camera_id)
+                return camera_image.content
+            except HomeAssistantError as err:
+                last_error = str(err)
+                LOGGER.warning("Failed to get image from %s (attempt %d/%d): %s",
+                               camera_id, attempt + 1, MAX_IMAGE_RETRIES, last_error)
+
+                if attempt < MAX_IMAGE_RETRIES - 1:
+                    await asyncio.sleep(RETRY_IMAGE_DELAY * (attempt + 1))
+
+        raise HomeAssistantError(
+            f"Failed to get image from {camera_id} after {MAX_IMAGE_RETRIES} attempts. Last error: {last_error}")
 
     def _extract_labels(self, response: JsonObjectType, image_name: str) -> list[JsonObjectType]:
         """Extract labels from API response for specific image."""
