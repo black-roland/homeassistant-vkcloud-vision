@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "VK Cloud Vision Authentication",
-        "description": "Enter your VK Cloud Vision API credentials.",
+        "description": "Enter your [VK Cloud Vision API credentials](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/).",
         "data": {
           "client_id": "Client ID",
           "client_secret": "Client secret"
@@ -14,7 +14,7 @@
   "services": {
     "detect_objects": {
       "name": "Detect Objects",
-      "description": "Detect objects, scenes, or other features in images using VK Cloud Vision API and optionally save processed images with bounding boxes.",
+      "description": "Detect objects, scenes, or other features in images and optionally save processed images with bounding boxes.",
       "fields": {
         "modes": {
           "name": "Detection Modes",
@@ -28,7 +28,7 @@
     },
     "recognize_text": {
       "name": "Recognize Text",
-      "description": "Recognize text in images using VK Cloud Vision API.",
+      "description": "Recognize text in images.",
       "fields": {
         "detailed": {
           "name": "Detailed Results",
