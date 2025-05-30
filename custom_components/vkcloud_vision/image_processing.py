@@ -23,10 +23,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 from homeassistant.util.pil import draw_box
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, UnidentifiedImageError
 
 from .api.vkcloud.vision import VKCloudVision
-from .const import DOMAIN, LOGGER, ResponseType
+from .const import DOMAIN, LOGGER, SNAPSHOT_INTERVAL_SEC, ResponseType
 
 DEFAULT_IMAGE_TIMEOUT = 10
 MAX_IMAGE_RETRIES = 3
@@ -75,30 +75,32 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         self.process_image(image)
 
     async def async_detect_objects(
-        self, camera_id: str, modes: list[str], file_out: str | None
+        self, camera_id: str, modes: list[str], file_out: str | None, num_snapshots: int
     ) -> JsonObjectType:
         """Detect objects with optional bounding box drawing."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
 
-        image_data = await self._async_get_image(camera_id)
-        image_name = split_entity_id(camera_id)[1]
+        images_data = await self._async_get_images(camera_id, num_snapshots)
+        images_meta = [{"name": f"{split_entity_id(camera_id)[1]}_{i + 1}"} for i in range(num_snapshots)]
 
         try:
             response = await client.objects.detect(
-                files=[image_data],
+                files=images_data,
                 modes=modes,
-                images=[{"name": image_name}],
+                images=images_meta,
             )
         except Exception as err:
             raise HomeAssistantError(f"Detection error: {err}") from err
 
         output_path = None
         if file_out:
+            if num_snapshots > 1:
+                LOGGER.debug("Multiple snapshots (%d) provided, but only the first one will be saved to %s.",
+                             num_snapshots, file_out)
             try:
                 output_path = await self.hass.async_add_executor_job(
-                    self._save_image, image_data, response.labels, file_out
-                )
+                    self._save_image, images_data[0], response.labels, file_out)
             except Exception as err:
                 LOGGER.error("Image processing failed: %s", err)
                 raise HomeAssistantError(f"Image processing failed: {err}") from err
@@ -119,12 +121,12 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         client: VKCloudVision = entry.runtime_data
 
         image_data = await self._async_get_image(camera_id)
-        image_name = split_entity_id(camera_id)[1]
+        image_meta = {"name": split_entity_id(camera_id)[1]}
 
         try:
             response = await client.text.recognize(
                 files=[image_data],
-                images=[{"name": image_name}],
+                images=[image_meta],
                 mode=mode,
             )
         except Exception as err:
@@ -140,7 +142,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         }
 
     async def _async_get_image(self, camera_id: str) -> bytes:
-        """Get image from camera with retry logic."""
+        """Get a single image from camera with retry logic."""
         last_error = None
 
         for attempt in range(MAX_IMAGE_RETRIES):
@@ -158,9 +160,24 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         raise HomeAssistantError(
             f"Failed to get image from {camera_id} after {MAX_IMAGE_RETRIES} attempts. Last error: {last_error}")
 
+    async def _async_get_images(self, camera_id: str, num_snapshots: int) -> list[bytes]:
+        """Get multiple snapshots from camera with a small interval."""
+        images_data = []
+
+        for i in range(num_snapshots):
+            image_data = await self._async_get_image(camera_id)
+            images_data.append(image_data)
+            if i < num_snapshots - 1:
+                await asyncio.sleep(SNAPSHOT_INTERVAL_SEC)
+
+        return images_data
+
     def _save_image(self, image_data: bytes, labels: list[dict[str, Any]], output_path: str) -> str:
         """Draw bounding boxes with labels and save image."""
-        image = Image.open(io.BytesIO(image_data)).convert("RGB")
+        try:
+            image = Image.open(io.BytesIO(image_data)).convert("RGB")
+        except UnidentifiedImageError as err:
+            raise HomeAssistantError("Unable to process image: bad data") from err
 
         draw = ImageDraw.Draw(image)
         img_width, img_height = image.size
@@ -175,6 +192,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                     y2 / img_height,  # y_max
                     x2 / img_width    # x_max
                 )
+                # TODO: Cyrillic support
                 draw_box(draw, box, img_width, img_height, label.get("eng", ""))
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)

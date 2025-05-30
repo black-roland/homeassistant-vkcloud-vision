@@ -17,7 +17,9 @@ CONF_REFRESH_TOKEN = "refresh_token"
 ATTR_MODES = "modes"
 ATTR_FILE_OUT = "file_out"
 ATTR_DETAILED = "detailed"
+ATTR_NUM_SNAPSHOTS = "num_snapshots"
 
+DEFAULT_MODES = ["multiobject"]
 VALID_MODES = [
     "object",
     "object2",
@@ -27,6 +29,9 @@ VALID_MODES = [
     "pedestrian",
     "selfie",
 ]
+
+DEFAULT_NUM_SNAPSHOTS = 1
+SNAPSHOT_INTERVAL_SEC = 1  # seconds between snapshots
 
 
 class ResponseType(StrEnum):

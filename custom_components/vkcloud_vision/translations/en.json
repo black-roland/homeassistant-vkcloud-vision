@@ -23,6 +23,10 @@
         "file_out": {
           "name": "Output File Path",
           "description": "Template for path to save processed image with bounding boxes."
+        },
+        "num_snapshots": {
+          "name": "Number of Snapshots",
+          "description": "Number of snapshots to capture from the camera with a one second interval. Defaults to 1."
         }
       }
     },
@@ -41,10 +45,10 @@
     "modes": {
       "options": {
         "multiobject": "Multi-objects",
-        "car_number": "Car license plates",
+        "car_number": "Car number plates",
         "object": "Objects (version 1)",
         "object2": "Objects (version 2)",
-        "scene": "Scene",
+        "scene": "Scenes",
         "pedestrian": "People",
         "selfie": "Selfie"
       }

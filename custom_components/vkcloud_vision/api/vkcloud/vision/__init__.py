@@ -20,10 +20,12 @@ class VKCloudVision:
         self._hass = hass
         self._auth = auth
 
-        # Initialize feature-specific clients
-        # self.persons = PersonsClient(self._hass, self._auth, self._oauth_provider)
         self.objects = VKCloudVisionObjectsClient(self._hass, self._auth)
-        # self.docs = DocsClient(self._hass, self._auth, self._oauth_provider)
         self.text = VKCloudVisionTextClient(self._hass, self._auth)
+        # TODO: Face recognition
+        # self.persons = PersonsClient(self._hass, self._auth, self._oauth_provider)
+
+        # These APIs aren't really useful in the context of home automation, are they?
+        # self.docs = DocsClient(self._hass, self._auth, self._oauth_provider)
         # self.photo = PhotoClient(self._hass, self._auth, self._oauth_provider)
         # self.adult = AdultClient(self._hass, self._auth, self._oauth_provider)

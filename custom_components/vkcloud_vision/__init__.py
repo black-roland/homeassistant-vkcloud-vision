@@ -19,8 +19,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (ATTR_DETAILED, ATTR_FILE_OUT, ATTR_MODES, CONF_CLIENT_ID,
-                    CONF_REFRESH_TOKEN, DOMAIN, VALID_MODES, ResponseType)
+from .const import (ATTR_DETAILED, ATTR_FILE_OUT, ATTR_MODES,
+                    ATTR_NUM_SNAPSHOTS, CONF_CLIENT_ID, CONF_REFRESH_TOKEN,
+                    DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS, DOMAIN, VALID_MODES,
+                    ResponseType)
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
@@ -54,7 +56,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for camera_id in call.data.get("entity_id", []):
             try:
                 result[camera_id] = await vision_entity.async_detect_objects(
-                    camera_id, call.data.get(ATTR_MODES, ["multiobject"]), call.data.get(ATTR_FILE_OUT))
+                    camera_id,
+                    call.data.get(ATTR_MODES, DEFAULT_MODES),
+                    call.data.get(ATTR_FILE_OUT),
+                    call.data.get(ATTR_NUM_SNAPSHOTS, DEFAULT_NUM_SNAPSHOTS),
+                )
             except HomeAssistantError as err:
                 result[camera_id] = {
                     "response": None,
@@ -91,7 +97,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=cv.make_entity_service_schema({
             vol.Optional(ATTR_MODES, default=["multiobject"]): vol.All(cv.ensure_list, [vol.In(VALID_MODES)]),
             vol.Optional(ATTR_FILE_OUT): cv.string,
-            # TODO: Number of snapshots option
+            vol.Optional(ATTR_NUM_SNAPSHOTS, default=DEFAULT_NUM_SNAPSHOTS): vol.All(vol.Coerce(int), vol.Range(min=1)),
         }),
         supports_response=SupportsResponse.ONLY,
     )
@@ -102,7 +108,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         recognize_text,
         schema=cv.make_entity_service_schema({
             vol.Optional(ATTR_DETAILED): bool,
-            # TODO: Number of snapshots option
         }),
         supports_response=SupportsResponse.ONLY,
     )

@@ -4,7 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-
 from typing import List, cast
 
 from homeassistant.util.json import JsonObjectType, JsonValueType
@@ -14,7 +13,7 @@ class VKCloudVisionResponse:
     """Class to handle and parse VK Cloud Vision API responses."""
 
     def __init__(self, response: JsonObjectType):
-        """Initialize with API response and image name."""
+        """Initialize with API response."""
         self._raw_response = response
         self._errors: List[str] = []
         self._labels: list[JsonObjectType] = []
@@ -37,18 +36,20 @@ class VKCloudVisionResponse:
 
     @property
     def labels(self) -> list[JsonObjectType]:
-        """Return extracted labels for the image."""
+        """Return extracted labels for all images."""
         return self._labels
 
     def _process_response(self) -> None:
         """Process API response to extract labels and errors."""
         for mode, result in self._raw_response.items():
             for image in cast(List[dict[str, JsonValueType]], result):
+                image_name = image.get("name", "unknown")
                 status = image.get("status", 1)
                 if status != 0:
                     error = image.get("error", "unknown error")
-                    self._errors.append(f"{mode}: {error}")
+                    self._errors.append(f"{image_name} ({mode}): {error}")
 
-                # Extract labels from object detection results
-                if "labels" in image:
-                    self._labels.extend(cast(list[JsonObjectType], image["labels"]))
+            # FIXME: Proper parsing of multiple snapshot labels (good enough for now)
+            first_image = cast(List[dict[str, JsonValueType]], result)[0]
+            if "labels" in first_image:
+                self._labels.extend(cast(list[JsonObjectType], first_image["labels"]))
