@@ -29,8 +29,8 @@ from .api.vkcloud.vision import VKCloudVision
 from .const import DOMAIN, LOGGER, SNAPSHOT_INTERVAL_SEC, ResponseType
 
 DEFAULT_IMAGE_TIMEOUT = 10
-MAX_IMAGE_RETRIES = 3
-RETRY_IMAGE_DELAY = 1
+MAX_IMAGE_RETRIES = 5
+RETRY_IMAGE_DELAY = 3
 
 
 def setup_platform(
