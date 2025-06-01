@@ -1,13 +1,17 @@
-See [description in English](#vk-cloud-vision-for-home-assistant) below 👇
-<br>
-<br>
+<div align="center">
+  <sub><sup>See <a href="#vk-cloud-vision-for-home-assistant">description in English</a> below 👇</sub></sup>
+  <br>
+  <br>
+</div>
 
-# VK Cloud Vision для Home Assistant
+<div align="center">
+  <h1>VK Cloud Vision для Home Assistant</h1>
 
-[![Добавить репозиторий в HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=black-roland&repository=homeassistant-vkcloud-vision&category=integration)
-[![Настроить интеграцию](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloud_vision)
+  [![Добавить репозиторий в HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=black-roland&repository=homeassistant-vkcloud-vision&category=integration)
+  [![Настроить интеграцию](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloud_vision)
 
-Интеграция добавляет поддержку облачного распознавания объектов и текста через сервис VK Cloud Vision. Используйте возможности компьютерного зрения для создания автоматизаций на основе анализа изображений с камер видеонаблюдения.
+  <p>Интеграция добавляет поддержку облачного распознавания объектов и текста через VK Cloud Vision.<br>Используйте возможности компьютерного зрения для создания автоматизаций на основе анализа изображений с камер видеонаблюдения.</p>
+</div>
 
 ## Возможности
 
@@ -17,6 +21,11 @@ See [description in English](#vk-cloud-vision-for-home-assistant) below 👇
 - Blueprints для реализации распространённых сценариев.
 
 VK Cloud Vision — это облачный сервис, плата за который взимается в соответствии с [тарифами](https://cloud.vk.com/docs/ru/ml/vision/tariffication). При первой регистрации можно получить [приветственные бонусы](https://cloud.vk.com/bonus/).
+
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/62a12925-52f0-48c8-968f-c1776637c200" width="400" alt="Сигнализация с распознаванием объектов" />
+  <img src="https://github.com/user-attachments/assets/5b8aaeb0-5566-4552-a6e8-ccdc79373b36" width="400" alt="Распознавание автомобильных номеров" />
+</p>
 
 ## Установка и настройка
 
