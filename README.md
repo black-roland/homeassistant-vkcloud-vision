@@ -112,19 +112,15 @@ data:
   detailed: true
 ```
 
-<!--
-## Планы по развитию
-
-В будущих версиях планируется добавить:
-
-- **Автоматическое создание нескольких стоп-кадров** для повышения точности распознавания.
-- **Подписи на русском языке** на стоп-кадрах с разметкой объектов (при наличии интереса и поддержки через донаты).
-- **Распознавание лиц** с классификацией по признакам (возраст, пол, эмоции), если будет достаточная поддержка сообщества через донаты.
--->
-
 ## Поддержка автора
 
-Если эта интеграция оказалась для вас полезна, подумайте о том, чтобы [угостить автора чашечкой кофе](https://mansmarthome.info/donate/#donationalerts). Ваша благодарность ценится!
+Если интеграция оказалась полезной, вы можете [угостить автора чашечкой кофе](https://mansmarthome.info/donate/#donationalerts). Ваша благодарность ценится!
+
+#### Благодарности
+
+Огромное спасибо всем, кто поддерживает этот проект:
+
+![Спасибо][donors-list]
 
 ## Уведомление
 
@@ -178,8 +174,14 @@ This integration brings cloud-based object and text recognition to Home Assistan
 
 If this integration has been useful to you, consider [buying the author a coffee](https://www.donationalerts.com/r/mansmarthome). Your gratitude is appreciated!
 
+#### Thank you
+
+![Thank you][donors-list]
+
 ## Notice
 
 This is a community project, not affiliated with VK Cloud. VK Cloud Vision is a service provided by VK Cloud.
 
 This integration is not an official VK Cloud product and is not supported by VK.
+
+[donors-list]: https://github.com/user-attachments/assets/3042cd91-c224-441e-841c-226d92b833c9
