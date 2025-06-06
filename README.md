@@ -46,19 +46,35 @@ VK Cloud Vision — это облачный сервис, плата за кот
 
 ## Готовые автоматизации
 
-Для типовых задач доступны готовые blueprints:
-
 ### Охранная сигнализация с облачным распознаванием объектов
 
 [![Импорт blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fyaml.mansmarthome.info%2Froland%2F84cc0d91a7dd4517be28b3ee53f3a6b3%2Fdownload%2FHEAD%2Fobject_detection_triggered_alarm.yaml)
 
 Активирует сигнализацию при обнаружении людей или транспортных средств, игнорируя ложные срабатывания (например, движение веток или животных).
 
+Основные функции:
+- Активация только в выбранных режимах охраны;
+- Проверка на наличие важных объектов («Человек», «Автомобиль», «Грузовик», «Автобус»);
+- Сохранение стоп-кадров с разметкой объектов;
+- Логирование результатов обнаружения.
+
+### Система контроля доступа для транспорта
+
+[![Импорт blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fyaml.mansmarthome.info%2Froland%2F84cc0d91a7dd4517be28b3ee53f3a6b3%2Fraw%2FHEAD%2Flpr_triggered_actions.yaml)
+
+Автоматическое открытие ворот и выполнение других действий для «своих» машин и спецтранспорта.
+
+Основные функции:
+- Распознавание номеров «своих» автомобилей;
+- Идентификация спецтранспорта (скорая, спасатели, пожарные);
+- Обнаружение служебного транспорта (курьеры, доставка);
+- Гибкая настройка действий для разных категорий.
+
 ### Оповещение при обнаружении объектов
 
 [![Импорт blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fyaml.mansmarthome.info%2Froland%2F84cc0d91a7dd4517be28b3ee53f3a6b3%2Fdownload%2FHEAD%2Fmotion_triggered_object_detection_notifications.yaml)
 
-Отправляет push-уведомления при обнаружении заданных объектов с прикреплением стоп-кадра и списком распознанных объектов.
+Отправляет push-уведомления при обнаружении заданных объектов с прикреплением стоп-кадра и списком распознанных объектов. Логирует все обнаруженные объекты в журнал (logbook).
 
 <p float="left">
   <img src="https://github.com/user-attachments/assets/a228f223-dbc4-4311-b02f-ae7331abe259" width="400" alt="Карточка с изображением с камеры" />
