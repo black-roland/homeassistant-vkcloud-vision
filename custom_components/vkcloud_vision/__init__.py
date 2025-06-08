@@ -26,7 +26,7 @@ from .const import (ATTR_DETAILED, ATTR_FILE_OUT, ATTR_MODES,
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SERVICE_DETECT_OBJECTS = "detect_objects"
 SERVICE_RECOGNIZE_TEXT = "recognize_text"
