@@ -209,4 +209,4 @@ This is a community project, not affiliated with VK Cloud. VK Cloud Vision is a 
 
 This integration is not an official VK Cloud product and is not supported by VK.
 
-[donors-list]: https://github.com/user-attachments/assets/3042cd91-c224-441e-841c-226d92b833c9
+[donors-list]: https://github.com/user-attachments/assets/42db246f-ac83-46f8-8cae-1bb526ad0a4e
