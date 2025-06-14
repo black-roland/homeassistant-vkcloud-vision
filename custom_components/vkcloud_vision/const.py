@@ -31,6 +31,7 @@ VALID_MODES = [
 ]
 
 DEFAULT_NUM_SNAPSHOTS = 1
+# TODO: Make SNAPSHOT_INTERVAL_SEC configurable
 SNAPSHOT_INTERVAL_SEC = 1  # seconds between snapshots
 
 

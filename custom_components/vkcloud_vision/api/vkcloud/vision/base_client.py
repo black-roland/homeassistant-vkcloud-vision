@@ -7,19 +7,21 @@
 import asyncio
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from aiohttp import ClientSession, ClientTimeout, FormData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.json import JsonObjectType
+from homeassistant.util.json import JsonObjectType, JsonValueType
 
 from ..auth import VKCloudAuth
-from ..exceptions import VKCloudVisionAPIError, VKCloudVisionAuthError
+from ..exceptions import (VKCloudVisionAPIError, VKCloudVisionAuthError,
+                          VKCloudVisionDetectionError)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
+# TODO: Make MAX_RETRIES configurable
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 
@@ -90,10 +92,7 @@ class VKCloudVisionBaseClient:
     ) -> JsonObjectType:
         """Execute single request attempt."""
         async with self._session.post(
-            url,
-            params=query_params,
-            data=data,
-            timeout=ClientTimeout(total=DEFAULT_TIMEOUT),
+            url, params=query_params, data=data, timeout=ClientTimeout(total=DEFAULT_TIMEOUT)
         ) as response:
             # Handle HTTP status codes
             if response.status >= 502 and response.status <= 504:
@@ -118,10 +117,20 @@ class VKCloudVisionBaseClient:
                     error_details=str(err),
                 )
 
+            # Check if body is present
+            try:
+                response_body: JsonObjectType = result["body"]
+            except KeyError as err:
+                raise VKCloudVisionAPIError(
+                    message="No response body",
+                    http_status=response.status,
+                    error_details=str(err),
+                )
+
             # Check API status
             api_status = result.get("status")
             if api_status != 200:
-                error_details = result.get("body", "No error details provided")
+                error_details = str(result("body"))
                 raise VKCloudVisionAPIError(
                     message="API returned non-200 status",
                     http_status=response.status,
@@ -129,21 +138,48 @@ class VKCloudVisionBaseClient:
                     error_details=error_details,
                 )
 
-            return result.get("body")
+            # Check for image errors
+            for mode, result in response_body.items():
+                for image in cast(List[dict[str, JsonValueType]], result):
+                    image_status = cast(int, image.get("status", 0))
+                    if image_status == 0:
+                        continue
+
+                    image_name = image.get("name", "unknown")
+                    raise VKCloudVisionDetectionError(
+                        mode=mode,
+                        image_name=cast(str, image_name),
+                        detection_status=image_status,
+                        partial_response=response_body,
+                        error_details=image.get("error", "unknown error"),
+                    )
+
+            return response_body
 
     async def _execute_request_with_retries(
         self, url: str, query_params: Dict[str, Any], files: List[bytes], meta: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Execute request with retry logic."""
+        last_error = None
+
         for attempt in range(MAX_RETRIES):
             data = self._prepare_form_data(files, meta)
             try:
                 return await self._execute_request(url, query_params, data)
-            except TimeoutError:
+            except TimeoutError as err:
+                last_error = err
                 _LOGGER.warning("Timeout occurred on attempt %d/%d", attempt + 1, MAX_RETRIES)
+            # VK Cloud support suggested adding retry logic to deal with
+            # temporary object detection errors 🤷‍♂️ (ticket #2025060200475)
+            except VKCloudVisionDetectionError as err:
+                last_error = err
+                _LOGGER.info(f"{err.message} occurred on attempt %d/%d", attempt + 1, MAX_RETRIES)
 
             # Exponential backoff
             await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
+
+        if partial_response := getattr(last_error, 'partial_response', None):
+            return partial_response
 
         raise VKCloudVisionAPIError(
             message=f"Failed after {MAX_RETRIES} attempts",

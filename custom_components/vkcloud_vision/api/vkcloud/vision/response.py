@@ -47,7 +47,7 @@ class VKCloudVisionResponse:
                 status = image.get("status", 1)
                 if status != 0:
                     error = image.get("error", "unknown error")
-                    self._errors.append(f"{image_name} ({mode}): {error}")
+                    self._errors.append(f"{image_name} ({mode}) {error}")
 
             # FIXME: Proper parsing of multiple snapshot labels (good enough for now)
             first_image = cast(List[dict[str, JsonValueType]], result)[0]
