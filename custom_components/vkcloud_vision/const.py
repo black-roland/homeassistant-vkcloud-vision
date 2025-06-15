@@ -19,6 +19,7 @@ ATTR_FILE_OUT = "file_out"
 ATTR_DETAILED = "detailed"
 ATTR_NUM_SNAPSHOTS = "num_snapshots"
 ATTR_SNAPSHOT_INTERVAL_SEC = "snapshot_interval_sec"
+ATTR_MAX_RETRIES = "max_retries"
 
 DEFAULT_MODES = ["multiobject"]
 VALID_MODES = [
@@ -33,6 +34,7 @@ VALID_MODES = [
 
 DEFAULT_NUM_SNAPSHOTS = 1
 DEFAULT_SNAPSHOT_INTERVAL_SEC = .5
+DEFAULT_MAX_RETRIES = 5
 
 
 class ResponseType(StrEnum):

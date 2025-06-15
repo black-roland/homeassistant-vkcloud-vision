@@ -21,8 +21,6 @@ from ..exceptions import (VKCloudVisionAPIError, VKCloudVisionAuthError,
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
-# TODO: Make MAX_RETRIES configurable
-MAX_RETRIES = 5
 RETRY_DELAY = 1
 
 
@@ -45,6 +43,7 @@ class VKCloudVisionBaseClient:
         files: List[bytes],
         meta: Dict[str, Any],
         params: Optional[Dict[str, Any]] = None,
+        max_retries: int = 5,
     ) -> JsonObjectType:
         """Make an API request with multipart/form-data."""
         access_token = await self._auth.get_access_token()
@@ -60,7 +59,7 @@ class VKCloudVisionBaseClient:
         if params:
             query_params.update(params)
 
-        return await self._execute_request_with_retries(url, query_params, files, meta)
+        return await self._execute_request_with_retries(url, query_params, files, meta, max_retries)
 
     def _prepare_form_data(
         self, files: List[bytes], meta: Dict[str, Any]
@@ -144,7 +143,7 @@ class VKCloudVisionBaseClient:
                 failed_images = [img for img in images if img.get("status", 0) != 0]
                 image_names = {str(image.get("name")) for image in images}
 
-                # Single image and it failed in one of the modes (e.g. object2 failed but object succeded)
+                # Single image and it failed in one of the modes (e.g. object2 failed but object succeeded)
                 if len(image_names) == 1 and len(failed_images) > 0:
                     image = failed_images[0]
                     raise VKCloudVisionDetectionError(
@@ -167,28 +166,28 @@ class VKCloudVisionBaseClient:
             return response_body
 
     async def _execute_request_with_retries(
-        self, url: str, query_params: Dict[str, Any], files: List[bytes], meta: Dict[str, Any]
+        self, url: str, query_params: Dict[str, Any], files: List[bytes], meta: Dict[str, Any], max_retries: int
     ) -> Dict[str, Any]:
         """Execute request with retry logic."""
         last_error = None
 
-        for attempt in range(MAX_RETRIES):
+        for attempt in range(max_retries):
             data = self._prepare_form_data(files, meta)
             try:
                 return await self._execute_request(url, query_params, data)
             except TimeoutError as err:
                 last_error = err
-                _LOGGER.warning("Timeout occurred on attempt %d/%d", attempt + 1, MAX_RETRIES)
+                _LOGGER.warning("Timeout occurred on attempt %d/%d", attempt + 1, max_retries)
             # VK Cloud support suggested adding retry logic to deal with
             # temporary object detection errors 🤷‍♂️ (ticket #2025060200475)
             except VKCloudVisionDetectionError as err:
                 last_error = err
-                _LOGGER.info(f"{err.message} occurred on attempt %d/%d", attempt + 1, MAX_RETRIES)
+                _LOGGER.info(f"{err.message} occurred on attempt %d/%d", attempt + 1, max_retries)
 
             # Exponential backoff
             await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
 
         raise VKCloudVisionAPIError(
-            message=f"Failed after {MAX_RETRIES} attempts",
+            message=f"Failed after {max_retries} attempts",
             error_details=str(last_error),
         )

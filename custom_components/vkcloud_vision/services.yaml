@@ -41,6 +41,14 @@ detect_objects:
           step: 0.1
           unit_of_measurement: seconds
           mode: slider
+    max_retries:
+      default: 5
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 10
+          mode: box
     # config_entry_id:
     #   required: true
     #   selector:

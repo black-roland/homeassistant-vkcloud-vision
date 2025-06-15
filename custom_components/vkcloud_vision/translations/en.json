@@ -31,6 +31,10 @@
         "snapshot_interval_sec": {
           "name": "Snapshot Interval",
           "description": "Interval in seconds between capturing snapshots. Defaults to 0.5 seconds."
+        },
+        "max_retries": {
+          "name": "Maximum Retries",
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 5."
         }
       }
     },

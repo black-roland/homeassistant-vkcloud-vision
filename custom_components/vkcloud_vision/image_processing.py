@@ -75,7 +75,13 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         self.process_image(image)
 
     async def async_detect_objects(
-        self, camera_id: str, modes: list[str], file_out: str | None, num_snapshots: int, snapshot_interval_sec: float
+        self,
+        camera_id: str,
+        modes: list[str],
+        file_out: str | None,
+        num_snapshots: int,
+        snapshot_interval_sec: float,
+        max_retries: int
     ) -> JsonObjectType:
         """Detect objects with optional bounding box drawing."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
@@ -89,6 +95,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 files=images_data,
                 modes=modes,
                 images=images_meta,
+                max_retries=max_retries,
             )
         except Exception as err:
             raise HomeAssistantError(f"Detection error: {err}") from err

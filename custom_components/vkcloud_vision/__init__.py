@@ -19,11 +19,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (ATTR_DETAILED, ATTR_FILE_OUT, ATTR_MODES,
+from .const import (ATTR_DETAILED, ATTR_FILE_OUT, ATTR_MAX_RETRIES, ATTR_MODES,
                     ATTR_NUM_SNAPSHOTS, ATTR_SNAPSHOT_INTERVAL_SEC,
-                    CONF_CLIENT_ID, CONF_REFRESH_TOKEN, DEFAULT_MODES,
-                    DEFAULT_NUM_SNAPSHOTS, DEFAULT_SNAPSHOT_INTERVAL_SEC,
-                    DOMAIN, VALID_MODES, ResponseType)
+                    CONF_CLIENT_ID, CONF_REFRESH_TOKEN, DEFAULT_MAX_RETRIES,
+                    DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
+                    DEFAULT_SNAPSHOT_INTERVAL_SEC, DOMAIN, VALID_MODES,
+                    ResponseType)
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
@@ -62,6 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     call.data.get(ATTR_FILE_OUT),
                     call.data.get(ATTR_NUM_SNAPSHOTS, DEFAULT_NUM_SNAPSHOTS),
                     call.data.get(ATTR_SNAPSHOT_INTERVAL_SEC, DEFAULT_SNAPSHOT_INTERVAL_SEC),
+                    call.data.get(ATTR_MAX_RETRIES, DEFAULT_MAX_RETRIES),
                 )
             except HomeAssistantError as err:
                 result[camera_id] = {
@@ -107,6 +109,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(
                 ATTR_SNAPSHOT_INTERVAL_SEC, default=DEFAULT_SNAPSHOT_INTERVAL_SEC
             ): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=10)),
+            vol.Optional(
+                ATTR_MAX_RETRIES, default=DEFAULT_MAX_RETRIES
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
         }),
         supports_response=SupportsResponse.ONLY,
     )
