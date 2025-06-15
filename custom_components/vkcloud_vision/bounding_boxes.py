@@ -36,7 +36,7 @@ class BoundingBoxes:
         for label in self.labels:
             coord = label.get("coord")
             if coord and len(coord) == 4:
-                self._draw_box(draw, tuple(coord), label.get("rus", ""))
+                self._draw_box(draw, tuple(coord), label.get("rus", ""), label.get("prob", 0))
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         image.save(output_path)
@@ -48,7 +48,8 @@ class BoundingBoxes:
         self,
         draw: ImageDraw,
         coord: tuple[int, int, int, int],
-        text: str = "",
+        label: str = "",
+        probability: float = 0,
         color: tuple[int, int, int] = (255, 255, 0),
     ) -> None:
         """Draw a bounding box on an image using direct coordinates.
@@ -71,13 +72,15 @@ class BoundingBoxes:
         )
 
         # Draw the label if text is provided
-        if text:
+        if label:
             try:
                 font_path = os.path.join(os.path.dirname(__file__), "fonts", "Tuffy_Bold.ttf")
                 font = ImageFont.truetype(font_path, 20)
             except Exception as err:
                 LOGGER.warning("Failed to load custom font: %s. Using default font.", err)
                 font = ImageFont.load_default()
+
+            text = f"{label} {probability:.0%}" if probability else label
 
             draw.text(
                 (x1 + line_width, y1 - line_width - font_height),
