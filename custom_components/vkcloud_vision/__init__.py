@@ -20,9 +20,10 @@ from homeassistant.helpers.typing import ConfigType
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
 from .const import (ATTR_DETAILED, ATTR_FILE_OUT, ATTR_MODES,
-                    ATTR_NUM_SNAPSHOTS, CONF_CLIENT_ID, CONF_REFRESH_TOKEN,
-                    DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS, DOMAIN, VALID_MODES,
-                    ResponseType)
+                    ATTR_NUM_SNAPSHOTS, ATTR_SNAPSHOT_INTERVAL_SEC,
+                    CONF_CLIENT_ID, CONF_REFRESH_TOKEN, DEFAULT_MODES,
+                    DEFAULT_NUM_SNAPSHOTS, DEFAULT_SNAPSHOT_INTERVAL_SEC,
+                    DOMAIN, VALID_MODES, ResponseType)
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
@@ -60,6 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     call.data.get(ATTR_MODES, DEFAULT_MODES),
                     call.data.get(ATTR_FILE_OUT),
                     call.data.get(ATTR_NUM_SNAPSHOTS, DEFAULT_NUM_SNAPSHOTS),
+                    call.data.get(ATTR_SNAPSHOT_INTERVAL_SEC, DEFAULT_SNAPSHOT_INTERVAL_SEC),
                 )
             except HomeAssistantError as err:
                 result[camera_id] = {
@@ -95,9 +97,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_DETECT_OBJECTS,
         detect_objects,
         schema=cv.make_entity_service_schema({
-            vol.Optional(ATTR_MODES, default=["multiobject"]): vol.All(cv.ensure_list, [vol.In(VALID_MODES)]),
+            vol.Optional(
+                ATTR_MODES, default=["multiobject"]
+            ): vol.All(cv.ensure_list, [vol.In(VALID_MODES)]),
             vol.Optional(ATTR_FILE_OUT): cv.string,
-            vol.Optional(ATTR_NUM_SNAPSHOTS, default=DEFAULT_NUM_SNAPSHOTS): vol.All(vol.Coerce(int), vol.Range(min=1)),
+            vol.Optional(
+                ATTR_NUM_SNAPSHOTS, default=DEFAULT_NUM_SNAPSHOTS
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),
+            vol.Optional(
+                ATTR_SNAPSHOT_INTERVAL_SEC, default=DEFAULT_SNAPSHOT_INTERVAL_SEC
+            ): vol.All(vol.Coerce(float), vol.Range(min=0.1, max=10)),
         }),
         supports_response=SupportsResponse.ONLY,
     )

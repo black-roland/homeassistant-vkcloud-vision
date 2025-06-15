@@ -26,7 +26,11 @@
         },
         "num_snapshots": {
           "name": "Number of Snapshots",
-          "description": "Number of snapshots to capture from the camera with a one second interval. Defaults to 1."
+          "description": "Number of snapshots to capture from the camera. Defaults to 1."
+        },
+        "snapshot_interval_sec": {
+          "name": "Snapshot Interval",
+          "description": "Interval in seconds between capturing snapshots. Defaults to 0.5 seconds."
         }
       }
     },

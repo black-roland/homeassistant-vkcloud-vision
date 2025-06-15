@@ -18,6 +18,7 @@ ATTR_MODES = "modes"
 ATTR_FILE_OUT = "file_out"
 ATTR_DETAILED = "detailed"
 ATTR_NUM_SNAPSHOTS = "num_snapshots"
+ATTR_SNAPSHOT_INTERVAL_SEC = "snapshot_interval_sec"
 
 DEFAULT_MODES = ["multiobject"]
 VALID_MODES = [
@@ -31,8 +32,7 @@ VALID_MODES = [
 ]
 
 DEFAULT_NUM_SNAPSHOTS = 1
-# TODO: Make SNAPSHOT_INTERVAL_SEC configurable
-SNAPSHOT_INTERVAL_SEC = 1  # seconds between snapshots
+DEFAULT_SNAPSHOT_INTERVAL_SEC = .5
 
 
 class ResponseType(StrEnum):

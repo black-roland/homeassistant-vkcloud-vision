@@ -26,11 +26,11 @@ from homeassistant.util.pil import draw_box
 from PIL import Image, ImageDraw, UnidentifiedImageError
 
 from .api.vkcloud.vision import VKCloudVision
-from .const import DOMAIN, LOGGER, SNAPSHOT_INTERVAL_SEC, ResponseType
+from .const import DOMAIN, LOGGER, ResponseType
 
 DEFAULT_IMAGE_TIMEOUT = 10
 MAX_IMAGE_RETRIES = 5
-RETRY_IMAGE_DELAY = 3
+RETRY_IMAGE_DELAY = 2
 
 
 def setup_platform(
@@ -75,13 +75,13 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         self.process_image(image)
 
     async def async_detect_objects(
-        self, camera_id: str, modes: list[str], file_out: str | None, num_snapshots: int
+        self, camera_id: str, modes: list[str], file_out: str | None, num_snapshots: int, snapshot_interval_sec: float
     ) -> JsonObjectType:
         """Detect objects with optional bounding box drawing."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
 
-        images_data = await self._async_get_images(camera_id, num_snapshots)
+        images_data = await self._async_get_images(camera_id, num_snapshots, snapshot_interval_sec)
         images_meta = [{"name": f"{split_entity_id(camera_id)[1]}_{i + 1}"} for i in range(num_snapshots)]
 
         try:
@@ -160,7 +160,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         raise HomeAssistantError(
             f"Failed to get image from {camera_id} after {MAX_IMAGE_RETRIES} attempts. Last error: {last_error}")
 
-    async def _async_get_images(self, camera_id: str, num_snapshots: int) -> list[bytes]:
+    async def _async_get_images(self, camera_id: str, num_snapshots: int, snapshot_interval_sec: float) -> list[bytes]:
         """Get multiple snapshots from camera with a small interval."""
         images_data = []
 
@@ -168,7 +168,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
             image_data = await self._async_get_image(camera_id)
             images_data.append(image_data)
             if i < num_snapshots - 1:
-                await asyncio.sleep(SNAPSHOT_INTERVAL_SEC)
+                await asyncio.sleep(snapshot_interval_sec)
 
         return images_data
 
