@@ -5,8 +5,6 @@
 from enum import Enum
 from typing import Any, Optional
 
-from homeassistant.util.json import JsonObjectType
-
 
 class VKCloudVisionDetectionStatus(Enum):
     SUCCESS = 0
@@ -66,13 +64,11 @@ class VKCloudVisionDetectionError(VKCloudVisionAPIError):
         mode: str,
         image_name: str,
         detection_status: int,
-        partial_response: JsonObjectType,
         http_status: Optional[int] = None,
         api_status: Optional[int] = None,
         error_details: Optional[Any] = None
     ) -> None:
         self.detection_status = VKCloudVisionDetectionStatus(detection_status)
-        self.partial_response = partial_response
 
         message = image_name + f" {mode} detection {self.detection_status.name}".lower().replace("_", " ")
         super().__init__(message, http_status, api_status, error_details)

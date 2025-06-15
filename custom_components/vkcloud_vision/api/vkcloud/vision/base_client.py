@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 # TODO: Make MAX_RETRIES configurable
-MAX_RETRIES = 3
+MAX_RETRIES = 5
 RETRY_DELAY = 1
 
 
@@ -140,17 +140,27 @@ class VKCloudVisionBaseClient:
 
             # Check for image errors
             for mode, result in response_body.items():
-                for image in cast(List[dict[str, JsonValueType]], result):
-                    image_status = cast(int, image.get("status", 0))
-                    if image_status == 0:
-                        continue
+                images = cast(List[dict[str, JsonValueType]], result)
+                failed_images = [img for img in images if img.get("status", 0) != 0]
+                image_names = {str(image.get("name")) for image in images}
 
-                    image_name = image.get("name", "unknown")
+                # Single image and it failed in one of the modes (e.g. object2 failed but object succeded)
+                if len(image_names) == 1 and len(failed_images) > 0:
+                    image = failed_images[0]
                     raise VKCloudVisionDetectionError(
                         mode=mode,
-                        image_name=cast(str, image_name),
-                        detection_status=image_status,
-                        partial_response=response_body,
+                        image_name=cast(str, image.get("name", "unknown")),
+                        detection_status=cast(int, image.get("status", 0)),
+                        error_details=image.get("error", "unknown error"),
+                    )
+
+                # Multiple images, all failed
+                if len(failed_images) == len(images):
+                    image = failed_images[0]
+                    raise VKCloudVisionDetectionError(
+                        mode=mode,
+                        image_name=cast(str, image.get("name", "unknown")),
+                        detection_status=cast(int, image.get("status", 0)),
                         error_details=image.get("error", "unknown error"),
                     )
 
@@ -178,10 +188,7 @@ class VKCloudVisionBaseClient:
             # Exponential backoff
             await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
 
-        if partial_response := getattr(last_error, 'partial_response', None):
-            return partial_response
-
         raise VKCloudVisionAPIError(
             message=f"Failed after {MAX_RETRIES} attempts",
-            error_details="Unknown error",
+            error_details=str(last_error),
         )
