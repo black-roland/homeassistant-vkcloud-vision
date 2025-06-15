@@ -7,9 +7,6 @@
 from __future__ import annotations
 
 import asyncio
-import io
-import os
-from typing import Any
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.components.image_processing import \
@@ -22,10 +19,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
-from homeassistant.util.pil import draw_box
-from PIL import Image, ImageDraw, UnidentifiedImageError
 
 from .api.vkcloud.vision import VKCloudVision
+from .bounding_boxes import BoundingBoxes
 from .const import DOMAIN, LOGGER, ResponseType
 
 DEFAULT_IMAGE_TIMEOUT = 10
@@ -106,8 +102,8 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 LOGGER.debug("Multiple snapshots (%d) provided, but only the first one will be saved to %s.",
                              num_snapshots, file_out)
             try:
-                output_path = await self.hass.async_add_executor_job(
-                    self._save_image, images_data[0], response.labels, file_out)
+                boxes = BoundingBoxes(images_data[0], response.labels)
+                output_path = await self.hass.async_add_executor_job(boxes.save_image, file_out)
             except Exception as err:
                 LOGGER.error("Image processing failed: %s", err)
                 raise HomeAssistantError(f"Image processing failed: {err}") from err
@@ -178,32 +174,3 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 await asyncio.sleep(snapshot_interval_sec)
 
         return images_data
-
-    def _save_image(self, image_data: bytes, labels: list[dict[str, Any]], output_path: str) -> str:
-        """Draw bounding boxes with labels and save image."""
-        try:
-            image = Image.open(io.BytesIO(image_data)).convert("RGB")
-        except UnidentifiedImageError as err:
-            raise HomeAssistantError("Unable to process image: bad data") from err
-
-        draw = ImageDraw.Draw(image)
-        img_width, img_height = image.size
-
-        for label in labels:
-            coord = label.get("coord")
-            if coord and len(coord) == 4:
-                x1, y1, x2, y2 = coord
-                box = (
-                    y1 / img_height,  # y_min
-                    x1 / img_width,   # x_min
-                    y2 / img_height,  # y_max
-                    x2 / img_width    # x_max
-                )
-                # TODO: Cyrillic support
-                draw_box(draw, box, img_width, img_height, label.get("eng", ""))
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        image.save(output_path)
-        LOGGER.debug("Image saved: %s", output_path)
-
-        return output_path
