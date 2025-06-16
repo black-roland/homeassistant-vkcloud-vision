@@ -10,5 +10,5 @@
   "issue_tracker": "https://github.com/black-roland/homeassistant-vkcloud-vision/issues",
   "loggers": ["vkcloud_vision"],
   "requirements": ["Pillow>=11.2.1"],
-  "version": "1.0.1"
+  "version": "1.1.0"
 }
