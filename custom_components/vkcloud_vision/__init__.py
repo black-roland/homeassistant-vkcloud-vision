@@ -19,12 +19,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (ATTR_DETAILED, ATTR_FILE_OUT, ATTR_MAX_RETRIES, ATTR_MODES,
-                    ATTR_NUM_SNAPSHOTS, ATTR_SNAPSHOT_INTERVAL_SEC,
-                    CONF_CLIENT_ID, CONF_REFRESH_TOKEN, DEFAULT_MAX_RETRIES,
-                    DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
+from .const import (ATTR_BOUNDING_BOXES, ATTR_DETAILED, ATTR_FILE_OUT,
+                    ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
+                    ATTR_SNAPSHOT_INTERVAL_SEC, CONF_CLIENT_ID,
+                    CONF_REFRESH_TOKEN, DEFAULT_BOUNDING_BOXES,
+                    DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
                     DEFAULT_SNAPSHOT_INTERVAL_SEC, DOMAIN, VALID_MODES,
-                    ResponseType)
+                    BoundingBoxesType, ResponseType)
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
@@ -61,6 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     camera_id,
                     call.data.get(ATTR_MODES, DEFAULT_MODES),
                     call.data.get(ATTR_FILE_OUT),
+                    call.data.get(ATTR_BOUNDING_BOXES, ATTR_BOUNDING_BOXES),
                     call.data.get(ATTR_NUM_SNAPSHOTS, DEFAULT_NUM_SNAPSHOTS),
                     call.data.get(ATTR_SNAPSHOT_INTERVAL_SEC, DEFAULT_SNAPSHOT_INTERVAL_SEC),
                     call.data.get(ATTR_MAX_RETRIES, DEFAULT_MAX_RETRIES),
@@ -103,6 +105,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ATTR_MODES, default=["multiobject"]
             ): vol.All(cv.ensure_list, [vol.In(VALID_MODES)]),
             vol.Optional(ATTR_FILE_OUT): cv.string,
+            vol.Optional(
+                ATTR_BOUNDING_BOXES, default=DEFAULT_BOUNDING_BOXES
+            ): vol.In([bb.value for bb in BoundingBoxesType]),
             vol.Optional(
                 ATTR_NUM_SNAPSHOTS, default=DEFAULT_NUM_SNAPSHOTS
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=100)),

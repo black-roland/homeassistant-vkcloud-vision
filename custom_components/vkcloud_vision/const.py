@@ -15,13 +15,13 @@ CONF_CLIENT_SECRET = "client_secret"
 CONF_REFRESH_TOKEN = "refresh_token"
 
 ATTR_MODES = "modes"
-ATTR_FILE_OUT = "file_out"
 ATTR_DETAILED = "detailed"
+ATTR_FILE_OUT = "file_out"
+ATTR_BOUNDING_BOXES = "bounding_boxes"
 ATTR_NUM_SNAPSHOTS = "num_snapshots"
 ATTR_SNAPSHOT_INTERVAL_SEC = "snapshot_interval_sec"
 ATTR_MAX_RETRIES = "max_retries"
 
-DEFAULT_MODES = ["multiobject"]
 VALID_MODES = [
     "object",
     "object2",
@@ -32,9 +32,20 @@ VALID_MODES = [
     "selfie",
 ]
 
+
+DEFAULT_MODES = ["multiobject"]
+DEFAULT_BOUNDING_BOXES = "rus"
 DEFAULT_NUM_SNAPSHOTS = 1
 DEFAULT_SNAPSHOT_INTERVAL_SEC = .5
 DEFAULT_MAX_RETRIES = 5
+
+
+class BoundingBoxesType(StrEnum):
+    """Bounding boxes display options."""
+    NONE = "none"
+    NO_LABELS = "no_labels"
+    RUS = "rus"
+    ENG = "eng"
 
 
 class ResponseType(StrEnum):

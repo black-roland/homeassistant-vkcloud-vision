@@ -7,22 +7,33 @@
 
 import io
 import os
-from typing import Any
+from typing import Any, Optional
 
 from homeassistant.exceptions import HomeAssistantError
 from PIL import Image, ImageFont, UnidentifiedImageError
 from PIL.ImageDraw import Draw, ImageDraw
+from propcache.api import cached_property
 
-from .const import LOGGER
+from .const import LOGGER, BoundingBoxesType
 
 
 class BoundingBoxes:
     """Helper class for image processing tasks."""
 
-    def __init__(self, image_data: bytes, labels: list[dict[str, Any]]) -> None:
+    def __init__(self, image_data: bytes, labels: list[dict[str, Any]], mode: BoundingBoxesType) -> None:
         """Initialize the BoundingBoxes class with image data and labels."""
         self.image_data = image_data
         self.labels = labels
+        self.mode = mode
+
+    @cached_property
+    def _font(self) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+        try:
+            font_path = os.path.join(os.path.dirname(__file__), "fonts", "Tuffy_Bold.ttf")
+            return ImageFont.truetype(font_path, 20)
+        except Exception as err:
+            LOGGER.warning("Failed to load custom font: %s. Using default font.", err)
+            return ImageFont.load_default()
 
     def save_image(self, output_path: str) -> str:
         """Draw bounding boxes with labels and save image."""
@@ -33,10 +44,19 @@ class BoundingBoxes:
 
         draw = Draw(image)
 
-        for label in self.labels:
-            coord = label.get("coord")
-            if coord and len(coord) == 4:
-                self._draw_box(draw, tuple(coord), label.get("rus", ""), label.get("prob", 0))
+        if self.mode != BoundingBoxesType.NONE:
+            for label in self.labels:
+                coord = label.get("coord")
+                if not coord:
+                    continue
+
+                text = None
+                if self.mode == BoundingBoxesType.RUS:
+                    text = label.get("rus")
+                elif self.mode == BoundingBoxesType.ENG:
+                    text = label.get("eng")
+
+                self._draw_box(draw, tuple(coord), text, label.get("prob", 0))
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         image.save(output_path)
@@ -48,7 +68,7 @@ class BoundingBoxes:
         self,
         draw: ImageDraw,
         coord: tuple[int, int, int, int],
-        label: str = "",
+        text_label: Optional[str] = None,
         probability: float = 0,
         color: tuple[int, int, int] = (255, 255, 0),
     ) -> None:
@@ -65,27 +85,16 @@ class BoundingBoxes:
         x1, y1, x2, y2 = coord
 
         # Draw the bounding box
-        draw.rectangle(
-            [x1, y1, x2, y2],
-            outline=color,
-            width=line_width
-        )
+        draw.rectangle([x1, y1, x2, y2], outline=color, width=line_width)
 
         # Draw the label if text is provided
-        if label:
-            try:
-                font_path = os.path.join(os.path.dirname(__file__), "fonts", "Tuffy_Bold.ttf")
-                font = ImageFont.truetype(font_path, 20)
-            except Exception as err:
-                LOGGER.warning("Failed to load custom font: %s. Using default font.", err)
-                font = ImageFont.load_default()
-
-            text = f"{label} {probability:.0%}" if probability else label
+        if text_label:
+            text = f"{text_label} {probability:.0%}" if probability else text_label
 
             draw.text(
-                (x1 + line_width, y1 - line_width - font_height),
+                (x1, y1 - line_width - font_height),
                 text,
                 fill=color,
-                font=font,
+                font=self._font,
                 font_size=font_height,
             )

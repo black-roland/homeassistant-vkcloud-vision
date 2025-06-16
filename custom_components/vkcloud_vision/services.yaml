@@ -23,6 +23,17 @@ detect_objects:
       example: "/config/www/vision_snapshot.jpg"
       selector:
         template:
+    bounding_boxes:
+      default: rus
+      required: false
+      selector:
+        select:
+          options:
+            - none
+            - no_labels
+            - rus
+            - eng
+          translation_key: bounding_boxes
     num_snapshots:
       default: 1
       required: false

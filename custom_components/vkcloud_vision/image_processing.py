@@ -22,7 +22,7 @@ from homeassistant.util.json import JsonObjectType
 
 from .api.vkcloud.vision import VKCloudVision
 from .bounding_boxes import BoundingBoxes
-from .const import DOMAIN, LOGGER, ResponseType
+from .const import DOMAIN, LOGGER, BoundingBoxesType, ResponseType
 
 DEFAULT_IMAGE_TIMEOUT = 10
 MAX_IMAGE_RETRIES = 10
@@ -75,9 +75,10 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         camera_id: str,
         modes: list[str],
         file_out: str | None,
+        bounding_boxes: str,
         num_snapshots: int,
         snapshot_interval_sec: float,
-        max_retries: int
+        max_retries: int,
     ) -> JsonObjectType:
         """Detect objects with optional bounding box drawing."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
@@ -102,7 +103,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 LOGGER.debug("Multiple snapshots (%d) provided, but only the first one will be saved to %s.",
                              num_snapshots, file_out)
             try:
-                boxes = BoundingBoxes(images_data[0], response.labels)
+                boxes = BoundingBoxes(images_data[0], response.labels, BoundingBoxesType(bounding_boxes))
                 output_path = await self.hass.async_add_executor_job(boxes.save_image, file_out)
             except Exception as err:
                 LOGGER.error("Image processing failed: %s", err)
