@@ -12,17 +12,17 @@ from homeassistant.util.json import JsonObjectType, JsonValueType
 class VKCloudVisionResponse:
     """Class to handle and parse VK Cloud Vision API responses."""
 
-    def __init__(self, response: JsonObjectType):
+    def __init__(self, raw_response: JsonObjectType, prob_threshold: float = 0.1):
         """Initialize with API response."""
-        self._raw_response = response
         self._errors: List[str] = []
         self._labels: list[JsonObjectType] = []
-        self._process_response()
+        self._prob_threshold = prob_threshold
+        self._data = self._process_response(raw_response)
 
     @property
-    def raw_response(self) -> JsonObjectType:
-        """Return the raw API response."""
-        return self._raw_response
+    def data(self) -> JsonObjectType:
+        """Return the processed API response data."""
+        return self._data
 
     @property
     def has_errors(self) -> bool:
@@ -36,20 +36,33 @@ class VKCloudVisionResponse:
 
     @property
     def labels(self) -> list[JsonObjectType]:
-        """Return extracted labels for all images."""
+        """Return extracted labels for the first snapshot."""
         return self._labels
 
-    def _process_response(self) -> None:
-        """Process API response to extract labels and errors."""
-        for mode, result in self._raw_response.items():
+    def _process_response(self, response: JsonObjectType) -> JsonObjectType:
+        """Process and filter API response."""
+        processed = {}
+        for mode, result in response.items():
+            processed[mode] = []
             for image in cast(List[dict[str, JsonValueType]], result):
                 image_name = image.get("name", "unknown")
                 status = image.get("status", 1)
+
                 if status != 0:
                     error = image.get("error", "unknown error")
                     self._errors.append(f"{image_name} ({mode}) {error}")
 
-            # FIXME: Proper parsing of multiple snapshot labels (good enough for now)
-            first_image = cast(List[dict[str, JsonValueType]], result)[0]
-            if "labels" in first_image:
-                self._labels.extend(cast(list[JsonObjectType], first_image["labels"]))
+                processed_image = image.copy()
+                if "labels" in image:
+                    processed_image["labels"] = [
+                        label for label in cast(list[JsonValueType], image["labels"])
+                        if cast(dict, label).get("prob", 0) >= self._prob_threshold
+                    ]
+
+                    # FIXME: Proper parsing of multiple snapshot labels (good enough for now)
+                    if len(self._labels) == 0 and len(processed_image["labels"]) > 0:
+                        self._labels = cast(list[JsonObjectType], processed_image["labels"])
+
+                processed[mode].append(processed_image)
+
+        return processed

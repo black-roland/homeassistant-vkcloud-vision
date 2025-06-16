@@ -15,6 +15,7 @@ CONF_CLIENT_SECRET = "client_secret"
 CONF_REFRESH_TOKEN = "refresh_token"
 
 ATTR_MODES = "modes"
+ATTR_PROB_THRESHOLD = "prob_threshold"
 ATTR_DETAILED = "detailed"
 ATTR_FILE_OUT = "file_out"
 ATTR_BOUNDING_BOXES = "bounding_boxes"
@@ -34,6 +35,7 @@ VALID_MODES = [
 
 
 DEFAULT_MODES = ["multiobject"]
+DEFAULT_PROB_THRESHOLD = 0.1
 DEFAULT_BOUNDING_BOXES = "rus"
 DEFAULT_NUM_SNAPSHOTS = 1
 DEFAULT_SNAPSHOT_INTERVAL_SEC = .5

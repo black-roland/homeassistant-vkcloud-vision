@@ -20,6 +20,10 @@
           "name": "Detection Modes",
           "description": "Select one or more detection modes to apply. Defaults to \"multiobject\" if not specified."
         },
+        "prob_threshold": {
+          "name": "Probability Threshold",
+          "description": "Minimum probability for detected objects to be included in results. Defaults to 0.1 (10%)."
+        },
         "file_out": {
           "name": "Output File Path",
           "description": "Template for path to save processed image with bounding boxes."

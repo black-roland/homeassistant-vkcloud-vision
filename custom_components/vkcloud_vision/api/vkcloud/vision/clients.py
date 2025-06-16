@@ -16,6 +16,7 @@ class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
         files: List[bytes],
         modes: List[str],
         images: List[Dict[str, str]],
+        prob_threshold: float,
         max_retries: int = 5,
     ) -> VKCloudVisionResponse:
         """Detect objects in a photo."""
@@ -24,7 +25,7 @@ class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
             "images": images,  # Expected format: [{"name": str}]
         }
         raw_response = await self._make_request("/v1/objects/detect", files, meta, max_retries=max_retries)
-        return VKCloudVisionResponse(raw_response)
+        return VKCloudVisionResponse(raw_response=raw_response, prob_threshold=prob_threshold)
 
 
 class VKCloudVisionTextClient(VKCloudVisionBaseClient):

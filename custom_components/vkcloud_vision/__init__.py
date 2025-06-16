@@ -21,11 +21,11 @@ from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
 from .const import (ATTR_BOUNDING_BOXES, ATTR_DETAILED, ATTR_FILE_OUT,
                     ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
-                    ATTR_SNAPSHOT_INTERVAL_SEC, CONF_CLIENT_ID,
-                    CONF_REFRESH_TOKEN, DEFAULT_BOUNDING_BOXES,
+                    ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
+                    CONF_CLIENT_ID, CONF_REFRESH_TOKEN, DEFAULT_BOUNDING_BOXES,
                     DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
-                    DEFAULT_SNAPSHOT_INTERVAL_SEC, DOMAIN, VALID_MODES,
-                    BoundingBoxesType, ResponseType)
+                    DEFAULT_PROB_THRESHOLD, DEFAULT_SNAPSHOT_INTERVAL_SEC,
+                    DOMAIN, VALID_MODES, BoundingBoxesType, ResponseType)
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
@@ -61,6 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 result[camera_id] = await vision_entity.async_detect_objects(
                     camera_id,
                     call.data.get(ATTR_MODES, DEFAULT_MODES),
+                    call.data.get(ATTR_PROB_THRESHOLD, DEFAULT_PROB_THRESHOLD),
                     call.data.get(ATTR_FILE_OUT),
                     call.data.get(ATTR_BOUNDING_BOXES, ATTR_BOUNDING_BOXES),
                     call.data.get(ATTR_NUM_SNAPSHOTS, DEFAULT_NUM_SNAPSHOTS),
@@ -104,6 +105,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(
                 ATTR_MODES, default=["multiobject"]
             ): vol.All(cv.ensure_list, [vol.In(VALID_MODES)]),
+            vol.Optional(
+                ATTR_PROB_THRESHOLD, default=DEFAULT_PROB_THRESHOLD
+            ): vol.All(vol.Coerce(float), vol.Range(min=0.01, max=1.0)),
             vol.Optional(ATTR_FILE_OUT): cv.string,
             vol.Optional(
                 ATTR_BOUNDING_BOXES, default=DEFAULT_BOUNDING_BOXES

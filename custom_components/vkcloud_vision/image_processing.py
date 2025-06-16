@@ -74,6 +74,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         self,
         camera_id: str,
         modes: list[str],
+        prob_threshold: float,
         file_out: str | None,
         bounding_boxes: str,
         num_snapshots: int,
@@ -92,9 +93,11 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 files=images_data,
                 modes=modes,
                 images=images_meta,
+                prob_threshold=prob_threshold,
                 max_retries=max_retries,
             )
         except Exception as err:
+            LOGGER.exception("Detection error", exc_info=err)
             raise HomeAssistantError(f"Detection error: {err}") from err
 
         output_path = None
@@ -113,7 +116,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         self.async_write_ha_state()
 
         return {
-            "response": response.raw_response,
+            "response": response.data,
             "file_out": output_path,
             "response_type": ResponseType.PARTIAL_ACTION_DONE if response.has_errors else ResponseType.ACTION_DONE,
             "error": response.error_message,
@@ -140,7 +143,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         self.async_write_ha_state()
 
         return {
-            "response": response.raw_response,
+            "response": response.data,
             "response_type": ResponseType.PARTIAL_ACTION_DONE if response.has_errors else ResponseType.ACTION_DONE,
             "error": response.error_message,
         }
