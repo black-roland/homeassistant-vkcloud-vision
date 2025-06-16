@@ -44,6 +44,7 @@ class VKCloudVisionResponse:
         processed = {}
         for mode, result in response.items():
             processed[mode] = []
+            first_image = True
             for image in cast(List[dict[str, JsonValueType]], result):
                 image_name = image.get("name", "unknown")
                 status = image.get("status", 1)
@@ -60,8 +61,9 @@ class VKCloudVisionResponse:
                     ]
 
                     # FIXME: Proper parsing of multiple snapshot labels (good enough for now)
-                    if len(self._labels) == 0 and len(processed_image["labels"]) > 0:
-                        self._labels = cast(list[JsonObjectType], processed_image["labels"])
+                    if first_image and len(processed_image["labels"]) > 0:
+                        self._labels.extend(cast(list[JsonObjectType], processed_image["labels"]))
+                        first_image = False
 
                 processed[mode].append(processed_image)
 
