@@ -5,7 +5,8 @@
 from homeassistant.core import HomeAssistant
 
 from ..auth import VKCloudAuth
-from .clients import VKCloudVisionObjectsClient, VKCloudVisionTextClient
+from .clients import (VKCloudVisionObjectsClient, VKCloudVisionPersonsClient,
+                      VKCloudVisionTextClient)
 
 
 class VKCloudVision:
@@ -23,7 +24,7 @@ class VKCloudVision:
         self.objects = VKCloudVisionObjectsClient(self._hass, self._auth)
         self.text = VKCloudVisionTextClient(self._hass, self._auth)
         # TODO: Face recognition
-        # self.persons = PersonsClient(self._hass, self._auth, self._oauth_provider)
+        self.persons = VKCloudVisionPersonsClient(self._hass, self._auth)
 
         # These APIs aren't really useful in the context of home automation, are they?
         # self.docs = DocsClient(self._hass, self._auth, self._oauth_provider)
