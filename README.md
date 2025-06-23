@@ -149,7 +149,7 @@ data:
 
 ## Поддержка автора
 
-Если интеграция оказалась полезной, вы можете [угостить автора чашечкой кофе](https://mansmarthome.info/donate/#donationalerts). Ваша благодарность ценится!
+Если интеграция оказалась полезной, вы можете [угостить автора чашечкой кофе](https://mansmarthome.info/donate/?utm_source=github&utm_medium=referral&utm_campaign=vision#donationalerts). Ваша благодарность ценится!
 
 #### Благодарности
 
