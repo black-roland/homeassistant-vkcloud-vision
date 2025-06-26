@@ -78,7 +78,7 @@ VK Cloud Vision — это облачный сервис, плата за кот
 
 [![Импорт blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fyaml.mansmarthome.info%2Froland%2F84cc0d91a7dd4517be28b3ee53f3a6b3%2Fdownload%2FHEAD%2Fmotion_triggered_object_detection_notifications.yaml)
 
-Отправляет push-уведомления при обнаружении заданных объектов с прикреплением стоп-кадра и списком распознанных объектов. Логирует все обнаруженные объекты в журнал (logbook).
+Отправляет push-уведомления при обнаружении заданных объектов с прикреплением стоп-кадра и списком распознанных объектов. [Логирует все обнаруженные объекты в журнал (logbook)](https://yaml.mansmarthome.info/roland/84cc0d91a7dd4517be28b3ee53f3a6b3#logbook).
 
 <p float="left">
   <img src="https://github.com/user-attachments/assets/a228f223-dbc4-4311-b02f-ae7331abe259" width="400" alt="Карточка с изображением с камеры" />
