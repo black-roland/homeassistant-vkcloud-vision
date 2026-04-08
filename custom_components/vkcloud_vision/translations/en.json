@@ -9,6 +9,9 @@
           "client_secret": "Client secret"
         }
       }
+    },
+    "error": {
+      "invalid_auth": "Authentication error"
     }
   },
   "services": {

@@ -9,6 +9,9 @@
           "client_secret": "Секретный ключ"
         }
       }
+    },
+    "error": {
+      "invalid_auth": "Ошибка аутентификации"
     }
   },
   "services": {

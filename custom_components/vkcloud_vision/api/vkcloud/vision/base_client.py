@@ -129,12 +129,11 @@ class VKCloudVisionBaseClient:
             # Check API status
             api_status = result.get("status")
             if api_status != 200:
-                error_details = str(result("body"))
                 raise VKCloudVisionAPIError(
                     message="API returned non-200 status",
                     http_status=response.status,
                     api_status=api_status,
-                    error_details=error_details,
+                    error_details=str(result["body"]),
                 )
 
             # Check for image errors
