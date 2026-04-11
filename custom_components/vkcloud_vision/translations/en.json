@@ -18,6 +18,10 @@
     },
     "error": {
       "invalid_auth": "Invalid API key"
+    },
+    "abort": {
+      "already_configured": "VK Cloud Vision is already configured",
+      "reconfigure_successful": "Token was successfully updated"
     }
   },
   "services": {
@@ -85,6 +89,11 @@
         "rus": "Russian labels",
         "eng": "English labels"
       }
+    }
+  },
+  "exceptions": {
+    "reauth_required": {
+      "message": "Please re-authenticate using the service token. Issue details: {github_issue_url}."
     }
   }
 }

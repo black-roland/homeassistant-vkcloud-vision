@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import (EntityServiceResponse, HomeAssistant,
                                 ServiceCall, SupportsResponse)
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -141,6 +141,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+
+    if not entry.data.get(CONF_API_KEY):
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="reauth_required",
+            translation_placeholders={
+                "github_issue_url": "https://github.com/black-roland/homeassistant-vkcloud-vision/issues/9"}
+        )
+
     auth_client = VKCloudAuth(
         hass,
         api_key=entry.data.get(CONF_API_KEY),

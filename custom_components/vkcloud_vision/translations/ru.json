@@ -9,8 +9,8 @@
         }
       },
       "reconfigure": {
-        "title": "Перенастройка VK Cloud Vision",
-        "description": "Обновите [статический сервисный токен]({obtain_token_url}).",
+        "title": "Обновление авторизационного токена",
+        "description": "Укажите новый [сервисный токен]({obtain_token_url}).",
         "data": {
           "api_key": "Сервисный токен"
         }
@@ -18,6 +18,10 @@
     },
     "error": {
       "invalid_auth": "Недействительный API-ключ"
+    },
+    "abort": {
+      "already_configured": "VK Cloud Vision уже настроен",
+      "reconfigure_successful": "Токен успешно обновлён"
     }
   },
   "services": {
@@ -85,6 +89,11 @@
         "rus": "Подписи на русском",
         "eng": "Подписи на английском"
       }
+    }
+  },
+  "exceptions": {
+    "reauth_required": {
+      "message": "Пожалуйста переавторизуйтесь, используя сервисный токен. Подробнее о проблеме: {github_issue_url}"
     }
   }
 }

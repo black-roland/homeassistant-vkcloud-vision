@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -63,6 +64,7 @@ class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_API_KEY: api_key},
                     version=self.VERSION,
                 )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="reconfigure_successful")
             except Exception as e:  # noqa: BLE001
                 errors["base"] = "invalid_auth"
@@ -76,4 +78,17 @@ class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
                 {vol.Required(CONF_API_KEY, default=current_key): str}
             ),
             errors=errors,
+            description_placeholders={
+                "obtain_token_url": "https://msk.cloud.vk.com/app/services/machinelearning/vision/access/"
+            }
         )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
+        """Perform reauth upon ConfigEntryAuthFailed."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Dialog that informs the user that re-authentication is required."""
+        # After user confirms → show the exact same API key form as reconfigure
+        # (context["entry_id"] is already set by HA for reauth flows)
+        return await self.async_step_reconfigure()
