@@ -10,6 +10,10 @@ from enum import StrEnum
 DOMAIN = "vkcloud_vision"
 LOGGER = logging.getLogger(__package__)
 
+# Static API key
+CONF_API_KEY = "api_key"
+
+# Keep the old ones for migration (they will be removed from new entries)
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 CONF_REFRESH_TOKEN = "refresh_token"

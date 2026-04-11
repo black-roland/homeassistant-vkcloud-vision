@@ -22,10 +22,11 @@ from .api.vkcloud.vision import VKCloudVision
 from .const import (ATTR_BOUNDING_BOXES, ATTR_DETAILED, ATTR_FILE_OUT,
                     ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
                     ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
-                    CONF_CLIENT_ID, CONF_REFRESH_TOKEN, DEFAULT_BOUNDING_BOXES,
-                    DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
-                    DEFAULT_PROB_THRESHOLD, DEFAULT_SNAPSHOT_INTERVAL_SEC,
-                    DOMAIN, VALID_MODES, BoundingBoxesType, ResponseType)
+                    CONF_API_KEY, CONF_CLIENT_ID, CONF_REFRESH_TOKEN,
+                    DEFAULT_BOUNDING_BOXES, DEFAULT_MAX_RETRIES, DEFAULT_MODES,
+                    DEFAULT_NUM_SNAPSHOTS, DEFAULT_PROB_THRESHOLD,
+                    DEFAULT_SNAPSHOT_INTERVAL_SEC, DOMAIN, LOGGER, VALID_MODES,
+                    BoundingBoxesType, ResponseType)
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
@@ -141,7 +142,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     auth_client = VKCloudAuth(
-        hass, client_id=entry.data[CONF_CLIENT_ID], refresh_token=entry.data[CONF_REFRESH_TOKEN])
+        hass,
+        api_key=entry.data.get(CONF_API_KEY),
+        client_id=entry.data.get(CONF_CLIENT_ID),
+        refresh_token=entry.data.get(CONF_REFRESH_TOKEN),
+    )
     client = VKCloudVision(hass, auth_client)
     entry.runtime_data = client
     return True
@@ -150,3 +155,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry."""
     return True
+
+
+# Migration (keeps old OAuth entries working until user reconfigures)
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate config entry to version 2 (static key)."""
+    if config_entry.version == 1:
+        # We cannot auto-convert the key – user must reconfigure.
+        # Just bump version; old data is still present so OAuth path works.
+        new_data = dict(config_entry.data)
+        hass.config_entries.async_update_entry(config_entry, version=2, data=new_data)
+        LOGGER.info("Migrated VK Cloud Vision config entry to v2 (OAuth still works until reconfigured)")
+        return True
+
+    return False

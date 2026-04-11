@@ -1,9 +1,10 @@
-"""VK Cloud Vision OAuth authorization helper."""
+"""VK Cloud Vision authorization helpers."""
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -11,8 +12,18 @@ from aiohttp import ClientSession
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .exceptions import VKCloudVisionAuthError
 
-class VKCloudAuth:
+
+class VKCloudAuthBase(ABC):
+    """Base class for all VK Cloud auth implementations."""
+
+    @abstractmethod
+    async def get_access_token(self) -> str:
+        """Return a valid access token (raises on failure)."""
+
+
+class VKCloudOAuthAuth(VKCloudAuthBase):
     def __init__(
         self,
         hass: HomeAssistant,
@@ -32,7 +43,7 @@ class VKCloudAuth:
         self._access_token: Optional[str] = None
         self._expires_at: Optional[datetime] = None
 
-    async def get_access_token(self) -> Optional[str]:
+    async def get_access_token(self) -> str:
         """Return the access token. If it exists and valid, return it. Otherwise, fetch or refresh one."""
         if self._access_token and self._expires_at and datetime.now() < self._expires_at:
             return self._access_token
@@ -44,7 +55,7 @@ class VKCloudAuth:
         # Otherwise, fetch a new token using client credentials
         return await self._fetch_new_token()
 
-    async def _fetch_new_token(self) -> Optional[str]:
+    async def _fetch_new_token(self) -> str:
         """Fetch a new access token using client credentials."""
         if not self._client_secret:
             raise Exception("Client secret is missing, re-authentication required")
@@ -81,7 +92,7 @@ class VKCloudAuth:
         except Exception as e:
             raise Exception(f"Error during token fetch: {e}")
 
-    async def _refresh_access_token(self) -> Optional[str]:
+    async def _refresh_access_token(self) -> str:
         """Refresh the access token using the refresh token."""
         headers = {
             "Content-Type": "application/json",
@@ -118,3 +129,45 @@ class VKCloudAuth:
     def get_refresh_token(self) -> Optional[str]:
         """Return the current refresh token."""
         return self._refresh_token
+
+
+class VKCloudApiKeyAuth(VKCloudAuthBase):
+    """Static service token."""
+
+    def __init__(self, _hass: HomeAssistant, api_key: str) -> None:
+        self._api_key = api_key.strip()
+
+    async def get_access_token(self) -> str:
+        if not self._api_key:
+            raise VKCloudVisionAuthError("Static API key (service token) is missing or empty")
+
+        return self._api_key
+
+
+class VKCloudAuth:
+    """Public auth wrapper – chooses the right implementation automatically."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        api_key: Optional[str] = None,
+        client_id: Optional[str] = None,
+        client_secret: Optional[str] = None,
+        refresh_token: Optional[str] = None,
+    ) -> None:
+        if api_key:
+            self._impl: VKCloudAuthBase = VKCloudApiKeyAuth(hass, api_key)
+        else:
+            # Old OAuth path (only used for existing config entries)
+            if not client_id:
+                raise VKCloudVisionAuthError("Either api_key or client_id must be provided")
+            self._impl = VKCloudOAuthAuth(
+                hass,
+                client_id=client_id,
+                client_secret=client_secret,
+                refresh_token=refresh_token,
+            )
+
+    async def get_access_token(self) -> str:
+        return await self._impl.get_access_token()

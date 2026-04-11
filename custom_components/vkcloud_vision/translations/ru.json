@@ -3,15 +3,21 @@
     "step": {
       "user": {
         "title": "Аутентификация в VK Cloud Vision",
-        "description": "Введите [данные для доступа к API VK Cloud Vision](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/).",
+        "description": "Введите [статический сервисный токен]({obtain_token_url}).",
         "data": {
-          "client_id": "Идентификатор клиента",
-          "client_secret": "Секретный ключ"
+          "api_key": "Сервисный токен"
+        }
+      },
+      "reconfigure": {
+        "title": "Перенастройка VK Cloud Vision",
+        "description": "Обновите [статический сервисный токен]({obtain_token_url}).",
+        "data": {
+          "api_key": "Сервисный токен"
         }
       }
     },
     "error": {
-      "invalid_auth": "Ошибка аутентификации"
+      "invalid_auth": "Недействительный API-ключ"
     }
   },
   "services": {
