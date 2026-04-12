@@ -32,17 +32,15 @@ VK Cloud Vision — это облачный сервис, плата за кот
 ### Подготовка
 
 1. Зарегистрируйтесь в [VK Cloud](https://cloud.vk.com/app/signup/).
-3. Создайте новый ключ в разделе «[Доступ через идентификатор клиента и секретный ключ](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/)».
-4. Сохраните полученные данные:
-   - Идентификатор клиента (Client ID);
-   - Секретный ключ (Client Secret).
+3. Создайте токен в разделе «[Доступ через сервисные токены](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/)».
+4. Сохраните полученный ключ.
 
 ### Установка
 
 1. [Скачайте интеграцию](https://my.home-assistant.io/redirect/hacs_repository/?owner=black-roland&repository=homeassistant-vkcloud-vision&category=integration) через HACS.
 2. Перезапустите Home Assistant.
 3. Перейдите в **Настройки → Устройства и службы → Добавить интеграцию** или используйте [кнопку настройки](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloud_vision).
-4. Введите **Идентификатор клиента** и **Секретный ключ**, полученные в личном кабинете VK Cloud.
+4. Введите **Сервисный токен**, полученный в личном кабинете VK Cloud.
 
 ## Использование на практике
 
