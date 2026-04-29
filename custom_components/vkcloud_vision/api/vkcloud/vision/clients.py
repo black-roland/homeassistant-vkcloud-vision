@@ -5,7 +5,8 @@
 from typing import Any, Dict, List, Optional
 
 from .base_client import VKCloudVisionBaseClient
-from .response import VKCloudVisionResponse
+from .response import (VKCloudVisionFaceRecognitionResponse,
+                       VKCloudVisionResponse)
 
 
 class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
@@ -66,12 +67,12 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
     async def set(
         self,
         files: List[bytes],
-        space: str,
+        space: int,
         images: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Set a relationship between a photo and person_id."""
         meta = {
-            "space": space,
+            "space": str(space),
             "images": images,  # Expected format: [{"name": str, "person_id": int}]
         }
         return await self._make_request("/v1/persons/set", files, meta)
@@ -79,38 +80,39 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
     async def delete(
         self,
         files: List[bytes],
-        space: str,
+        space: int,
         images: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Delete a relationship between a photo and person_id."""
         meta = {
-            "space": space,
+            "space": str(space),
             "images": images,  # Expected format: [{"name": str, "person_id": int}]
         }
         return await self._make_request("/v1/persons/delete", files, meta)
 
     async def truncate(
         self,
-        space: str,
+        space: int,
         files: List[bytes],
     ) -> Dict[str, Any]:
         """Clear the entire space."""
-        meta = {"space": space}
+        meta = {"space": str(space)}
         return await self._make_request("/v1/persons/truncate", files, meta)
 
     async def recognize(
         self,
         files: List[bytes],
-        space: str,
+        space: int,
         images: List[Dict[str, str]],
         create_new: bool = False,
         update_embedding: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> VKCloudVisionFaceRecognitionResponse:
         """Recognize a person in a photo."""
         meta = {
-            "space": space,
+            "space": str(space),
             "create_new": create_new,
             "update_embedding": update_embedding,
             "images": images,  # Expected format: [{"name": str}]
         }
-        return await self._make_request("/v1/persons/recognize", files, meta)
+        raw_response = await self._make_request("/v1/persons/recognize", files, meta)
+        return VKCloudVisionFaceRecognitionResponse(raw_response)

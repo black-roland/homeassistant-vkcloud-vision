@@ -23,17 +23,17 @@ from .const import (ATTR_BOUNDING_BOXES, ATTR_DETAILED, ATTR_FILE_OUT,
                     ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
                     ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
                     CONF_API_KEY, CONF_CLIENT_ID, CONF_REFRESH_TOKEN,
-                    DEFAULT_BOUNDING_BOXES, DEFAULT_MAX_RETRIES, DEFAULT_MODES,
-                    DEFAULT_NUM_SNAPSHOTS, DEFAULT_PROB_THRESHOLD,
-                    DEFAULT_SNAPSHOT_INTERVAL_SEC, DOMAIN, LOGGER, VALID_MODES,
-                    BoundingBoxesType, ResponseType)
+                    DEFAULT_BOUNDING_BOXES, DEFAULT_CREATE_NEW,
+                    DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
+                    DEFAULT_PROB_THRESHOLD, DEFAULT_SNAPSHOT_INTERVAL_SEC,
+                    DEFAULT_UPDATE_EMBEDDING, DOMAIN, LOGGER,
+                    SERVICE_DETECT_OBJECTS, SERVICE_RECOGNIZE_FACES,
+                    SERVICE_RECOGNIZE_TEXT, VALID_MODES, BoundingBoxesType,
+                    ResponseType)
 from .image_processing import VKCloudVisionEntity
 
 PLATFORMS = (Platform.IMAGE_PROCESSING,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-SERVICE_DETECT_OBJECTS = "detect_objects"
-SERVICE_RECOGNIZE_TEXT = "recognize_text"
 
 
 @cache
@@ -98,6 +98,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         return result
 
+    async def recognize_faces(call: ServiceCall) -> EntityServiceResponse:
+        vision_entity = get_vision_entity(hass)
+
+        result = {}
+        for camera_id in call.data.get("entity_id", []):
+            try:
+                result[camera_id] = await vision_entity.recognize_faces(
+                    camera_id,
+                    call.data["space"],
+                    call.data.get("create_new", False),
+                    call.data.get("update_embedding", True),
+                )
+            except HomeAssistantError as err:
+                result[camera_id] = {
+                    "response": None,
+                    "file_out": None,
+                    "response_type": ResponseType.ERROR,
+                    "error": str(err),
+                }
+
+        return result
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_DETECT_OBJECTS,
@@ -132,6 +154,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         recognize_text,
         schema=cv.make_entity_service_schema({
             vol.Optional(ATTR_DETAILED): bool,
+        }),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RECOGNIZE_FACES,
+        recognize_faces,
+        schema=cv.make_entity_service_schema({
+            vol.Required("space"): cv.string,
+            vol.Optional("create_new", default=DEFAULT_CREATE_NEW): cv.boolean,
+            vol.Optional("update_embedding", default=DEFAULT_UPDATE_EMBEDDING): cv.boolean,
         }),
         supports_response=SupportsResponse.ONLY,
     )

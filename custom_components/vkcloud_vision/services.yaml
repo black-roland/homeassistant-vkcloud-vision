@@ -84,3 +84,26 @@ recognize_text:
       required: false
       selector:
         boolean:
+recognize_faces:
+  target:
+    entity:
+      domain: camera
+  fields:
+    space:
+      default: 0
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 9
+          mode: box
+    create_new:
+      required: false
+      default: false
+      selector:
+        boolean:
+    update_embedding:
+      required: false
+      default: true
+      selector:
+        boolean:

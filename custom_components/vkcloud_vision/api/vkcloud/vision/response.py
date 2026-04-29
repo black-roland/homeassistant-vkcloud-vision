@@ -68,3 +68,52 @@ class VKCloudVisionResponse:
                 processed[mode].append(processed_image)
 
         return processed
+
+
+class VKCloudVisionFaceRecognitionResponse:
+    """Parse response from /v1/persons/recognize."""
+
+    def __init__(self, raw_response: dict):
+        self._persons: list[dict] = []
+        self._aliases_changed: bool = False
+        self._errors: list[str] = []
+        self._parse_persons(raw_response)
+
+    @property
+    def data(self) -> JsonObjectType:
+        """Return the processed API response data."""
+        return {
+            "persons": cast(JsonValueType, self._persons),
+            "aliases_changed": self._aliases_changed,
+        }
+
+    @property
+    def persons(self) -> list[dict]:
+        return self._persons
+
+    @property
+    def aliases_changed(self) -> bool:
+        return self._aliases_changed
+
+    @property
+    def has_errors(self) -> bool:
+        return bool(self._errors)
+
+    @property
+    def error_message(self) -> str | None:
+        return "; ".join(self._errors) if self._errors else None
+
+    def _parse_persons(self, response: JsonObjectType) -> None:
+        objects = response.get("objects", [])
+        self._aliases_changed = cast(bool, response.get("aliases_changed", False))
+
+        if not objects:
+            return
+
+        # We only handle a single image per request
+        obj = cast(List[dict], objects)[0]
+        status = obj.get("status", 0)
+        if status != 0:
+            self._errors.append(f"{obj.get('name', 'unknown')}: {obj.get('error', 'unknown')}")
+
+        self._persons = obj.get("persons", [])
