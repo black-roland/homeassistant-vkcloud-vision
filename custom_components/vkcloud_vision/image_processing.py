@@ -88,6 +88,8 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         images_data = await self._async_get_images(camera_id, num_snapshots, snapshot_interval_sec)
         images_meta = [{"name": f"{split_entity_id(camera_id)[1]}_{i + 1}"} for i in range(num_snapshots)]
 
+        response = None
+        api_error = None
         try:
             response = await client.objects.detect(
                 files=images_data,
@@ -98,7 +100,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
             )
         except Exception as err:
             LOGGER.exception("Detection error", exc_info=err)
-            raise HomeAssistantError(f"Detection error: {err}") from err
+            api_error = str(err)
 
         output_path = None
         if file_out:
@@ -106,11 +108,21 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 LOGGER.debug("Multiple snapshots (%d) provided, but only the first one will be saved to %s.",
                              num_snapshots, file_out)
             try:
-                boxes = BoundingBoxes(images_data[0], response.labels, BoundingBoxesType(bounding_boxes))
+                if response is not None:
+                    # API succeeded: draw bounding boxes
+                    boxes = BoundingBoxes(images_data[0], response.labels, BoundingBoxesType(bounding_boxes))
+                else:
+                    # API failed: save raw snapshot without annotations
+                    LOGGER.warning("API call failed. Saving raw snapshot without bounding boxes.")
+                    boxes = BoundingBoxes(images_data[0], [], BoundingBoxesType.NONE)
+
                 output_path = await self.hass.async_add_executor_job(boxes.save_image, file_out)
             except Exception as err:
-                LOGGER.error("Image processing failed: %s", err)
-                raise HomeAssistantError(f"Image processing failed: {err}") from err
+                LOGGER.error("Image saving failed: %s", err)
+                raise HomeAssistantError(f"Image saving failed: {err}") from err
+
+        if response is None:
+            raise HomeAssistantError(f"Detection error: {api_error}")
 
         self._last_detection = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
