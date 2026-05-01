@@ -99,11 +99,9 @@ recognize_faces:
           mode: box
     create_new:
       required: false
-      default: false
       selector:
         boolean:
     update_embedding:
       required: false
-      default: true
       selector:
         boolean:

@@ -6,11 +6,13 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (ConfigEntry, ConfigFlow,
-                                          ConfigFlowResult)
+                                          ConfigFlowResult, OptionsFlow)
 
 from .api.vkcloud.auth import VKCloudApiKeyAuth
-from .const import CONF_API_KEY, DOMAIN, LOGGER
+from .const import (CONF_API_KEY, CONF_FACE_RECOGNITION_SECTION,
+                    CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE, DOMAIN, LOGGER)
 
 
 class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -92,3 +94,46 @@ class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
         # After user confirms → show the exact same API key form as reconfigure
         # (context["entry_id"] is already set by HA for reauth flows)
         return await self.async_step_reconfigure()
+
+    @staticmethod
+    def async_get_options_flow(_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return VKCloudVisionOptionsFlow()
+
+
+class VKCloudVisionOptionsFlow(OptionsFlow):
+    """VK Cloud Vision options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        schema = self.vkcloud_vision_config_option_schema()
+        return self.async_show_form(
+            step_id="init",
+            data_schema=schema,
+        )
+
+    def vkcloud_vision_config_option_schema(self) -> vol.Schema:
+        """VK Cloud Vision options schema."""
+
+        face_recognition_schema = vol.Schema(
+            {
+                vol.Optional(CONF_TRAINING_MODE, default=DEFAULT_TRAINING_MODE): bool,
+            }
+        )
+
+        return self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(CONF_FACE_RECOGNITION_SECTION): data_entry_flow.section(
+                        face_recognition_schema,
+                        {"collapsed": False},
+                    ),
+                }
+            ),
+            self.config_entry.options,
+        )

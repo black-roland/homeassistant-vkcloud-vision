@@ -22,11 +22,12 @@ from .api.vkcloud.vision import VKCloudVision
 from .const import (ATTR_BOUNDING_BOXES, ATTR_DETAILED, ATTR_FILE_OUT,
                     ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
                     ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
-                    CONF_API_KEY, CONF_CLIENT_ID, CONF_REFRESH_TOKEN,
-                    DEFAULT_BOUNDING_BOXES, DEFAULT_CREATE_NEW,
+                    CONF_API_KEY, CONF_CLIENT_ID,
+                    CONF_FACE_RECOGNITION_SECTION, CONF_REFRESH_TOKEN,
+                    CONF_TRAINING_MODE, DEFAULT_BOUNDING_BOXES,
                     DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
                     DEFAULT_PROB_THRESHOLD, DEFAULT_SNAPSHOT_INTERVAL_SEC,
-                    DEFAULT_UPDATE_EMBEDDING, DOMAIN, LOGGER,
+                    DEFAULT_TRAINING_MODE, DOMAIN, LOGGER,
                     SERVICE_DETECT_OBJECTS, SERVICE_RECOGNIZE_FACES,
                     SERVICE_RECOGNIZE_TEXT, VALID_MODES, BoundingBoxesType,
                     ResponseType)
@@ -100,6 +101,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def recognize_faces(call: ServiceCall) -> EntityServiceResponse:
         vision_entity = get_vision_entity(hass)
+        vision_entry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
+
+        face_recognition_options = vision_entry.options.get(CONF_FACE_RECOGNITION_SECTION, {})
+        training_mode = face_recognition_options.get(CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE)
+        LOGGER.debug("Trainig mode: %s, create new: %s, update embedding: %s",
+                     training_mode,
+                     call.data.get("create_new", training_mode),
+                     call.data.get("update_embedding", training_mode))
 
         result = {}
         for camera_id in call.data.get("entity_id", []):
@@ -107,8 +116,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 result[camera_id] = await vision_entity.recognize_faces(
                     camera_id,
                     call.data["space"],
-                    call.data.get("create_new", False),
-                    call.data.get("update_embedding", True),
+                    call.data.get("create_new", training_mode),
+                    call.data.get("update_embedding", training_mode),
                 )
             except HomeAssistantError as err:
                 result[camera_id] = {
@@ -164,8 +173,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         recognize_faces,
         schema=cv.make_entity_service_schema({
             vol.Required("space"): cv.string,
-            vol.Optional("create_new", default=DEFAULT_CREATE_NEW): cv.boolean,
-            vol.Optional("update_embedding", default=DEFAULT_UPDATE_EMBEDDING): cv.boolean,
+            vol.Optional("create_new"): cv.boolean,
+            vol.Optional("update_embedding"): cv.boolean,
         }),
         supports_response=SupportsResponse.ONLY,
     )
