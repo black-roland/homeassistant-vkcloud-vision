@@ -160,6 +160,32 @@ class VKCloudVisionEntity(ImageProcessingEntity):
             "error": response.error_message,
         }
 
+    async def recognize_faces(
+            self, camera_id: str, space: int, create_new: bool, update_embedding: bool) -> JsonObjectType:
+        """Recognize faces in an image."""
+        entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
+        client: VKCloudVision = entry.runtime_data
+
+        image_data = await self._async_get_image(camera_id)
+        image_meta = {"name": split_entity_id(camera_id)[1]}
+
+        try:
+            response = await client.persons.recognize(
+                files=[image_data],
+                space=space,
+                images=[image_meta],
+                create_new=create_new,
+                update_embedding=update_embedding,
+            )
+        except Exception as err:
+            raise HomeAssistantError(f"Face recognition error: {err}") from err
+
+        return {
+            "response": response.data,
+            "response_type": ResponseType.PARTIAL_ACTION_DONE if response.has_errors else ResponseType.ACTION_DONE,
+            "error": response.error_message,
+        }
+
     async def _async_get_image(self, camera_id: str) -> bytes:
         """Get a single image from camera with retry logic."""
         last_error = None

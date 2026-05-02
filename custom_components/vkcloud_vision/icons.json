@@ -5,6 +5,9 @@
     },
     "recognize_text": {
       "service": "mdi:text-box-search-outline"
+    },
+    "recognize_faces": {
+      "service": "mdi:face-recognition"
     }
   }
 }

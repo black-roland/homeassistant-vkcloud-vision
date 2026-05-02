@@ -40,8 +40,8 @@ class VKCloudVisionBaseClient:
     async def _make_request(
         self,
         endpoint: str,
-        files: List[bytes],
         meta: Dict[str, Any],
+        files: Optional[List[bytes]] = None,
         params: Optional[Dict[str, Any]] = None,
         max_retries: int = 5,
     ) -> JsonObjectType:
@@ -59,12 +59,18 @@ class VKCloudVisionBaseClient:
         if params:
             query_params.update(params)
 
-        return await self._execute_request_with_retries(url, query_params, files, meta, max_retries)
+        return await self._execute_request_with_retries(url, query_params, meta, files, max_retries)
 
-    def _prepare_form_data(
-        self, files: List[bytes], meta: Dict[str, Any]
-    ) -> FormData:
+    def _prepare_form_data(self, meta: Dict[str, Any], files: Optional[List[bytes]]) -> FormData:
         """Prepare multipart form data for the request using file names from meta."""
+
+        data = FormData(default_to_multipart=True)
+
+        data.add_field("meta", json.dumps(meta))
+
+        if files is None or len(files) == 0:
+            return data
+
         if "images" not in meta or not isinstance(meta["images"], list):
             raise ValueError("meta must contain 'images' key with a list")
 
@@ -79,11 +85,9 @@ class VKCloudVisionBaseClient:
         if len(set(names)) != len(names):
             raise ValueError("All image names in meta must be unique")
 
-        data = FormData()
         for file_data, name in zip(files, names):
             data.add_field(name, file_data, filename=name)
 
-        data.add_field("meta", json.dumps(meta))
         return data
 
     async def _execute_request(
@@ -165,13 +169,18 @@ class VKCloudVisionBaseClient:
             return response_body
 
     async def _execute_request_with_retries(
-        self, url: str, query_params: Dict[str, Any], files: List[bytes], meta: Dict[str, Any], max_retries: int
+        self,
+        url: str,
+        query_params: Dict[str, Any],
+        meta: Dict[str, Any],
+        files: Optional[List[bytes]],
+        max_retries: int
     ) -> Dict[str, Any]:
         """Execute request with retry logic."""
         last_error = None
 
         for attempt in range(max_retries):
-            data = self._prepare_form_data(files, meta)
+            data = self._prepare_form_data(meta, files)
             try:
                 return await self._execute_request(url, query_params, data)
             except TimeoutError as err:

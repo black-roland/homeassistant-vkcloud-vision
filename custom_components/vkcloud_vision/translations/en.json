@@ -24,6 +24,40 @@
       "reconfigure_successful": "Token was successfully updated"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "VK Cloud Vision Settings",
+        "description": "Manage face recognition and data cleanup.",
+        "menu_options": {
+          "face_recognition": "Face recognition",
+          "truncate_space": "Clear face data"
+        }
+      },
+      "face_recognition": {
+        "title": "Face Recognition",
+        "description": "Enable training mode to automatically enroll unrecognized faces as new persons and update stored face references for better future recognition.\n\nThese settings act as defaults and can be overridden in `vkcloud_vision.recognize_faces` service call`.",
+        "data": {
+          "training_mode": "Training mode"
+        }
+      },
+      "truncate_space": {
+        "title": "Clear Face Data",
+        "description": "Remove all face data from a space. This action cannot be undone.",
+        "data": {
+          "truncate_space": "Space",
+          "confirm_truncate": "I understand, delete all faces"
+        }
+      }
+    },
+    "error": {
+      "confirm_truncate": "Please confirm the deletion",
+      "truncate_failed": "Failed to clear space. Check Home Assistant logs and try again."
+    },
+    "abort": {
+      "truncate_success": "Space cleared successfully"
+    }
+  },
   "services": {
     "detect_objects": {
       "name": "Detect Objects",
@@ -66,6 +100,24 @@
         "detailed": {
           "name": "Detailed Results",
           "description": "Return detailed recognition results with coordinates and confidence scores."
+        }
+      }
+    },
+    "recognize_faces": {
+      "name": "Recognize Faces",
+      "description": "Identify persons in camera snapshots using face recognition. Use training mode in integration options to automatically enroll new faces.",
+      "fields": {
+        "space": {
+          "name": "Face Space",
+          "description": "Numeric identifier (0–9) to isolate persons between different applications."
+        },
+        "create_new": {
+          "name": "Create New",
+          "description": "If enabled, unrecognized faces will be automatically added as new persons."
+        },
+        "update_embedding": {
+          "name": "Update Embedding",
+          "description": "Update the stored face reference for better future recognition. Disable for low-quality images."
         }
       }
     }

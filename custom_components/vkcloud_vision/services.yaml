@@ -74,6 +74,7 @@ detect_objects:
     #   selector:
     #     config_entry:
     #       integration: vkcloud_vision
+
 recognize_text:
   target:
     entity:
@@ -81,6 +82,28 @@ recognize_text:
   fields:
     detailed:
       default: false
+      required: false
+      selector:
+        boolean:
+
+recognize_faces:
+  target:
+    entity:
+      domain: camera
+  fields:
+    space:
+      default: 0
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 9
+          mode: box
+    create_new:
+      required: false
+      selector:
+        boolean:
+    update_embedding:
       required: false
       selector:
         boolean:
