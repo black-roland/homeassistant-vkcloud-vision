@@ -25,7 +25,7 @@ class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
             "mode": modes,  # e.g., ["object", "object2", "scene"]
             "images": images,  # Expected format: [{"name": str}]
         }
-        raw_response = await self._make_request("/v1/objects/detect", files, meta, max_retries=max_retries)
+        raw_response = await self._make_request("/v1/objects/detect", meta, files, max_retries=max_retries)
         return VKCloudVisionResponse(raw_response=raw_response, prob_threshold=prob_threshold)
 
 
@@ -43,7 +43,7 @@ class VKCloudVisionTextClient(VKCloudVisionBaseClient):
         meta: Dict[str, Any] = {"images": images}  # Expected format: [{"name": str}]
         if mode:
             meta["mode"] = mode  # e.g., "detailed"
-        raw_response = await self._make_request("/v1/text/recognize", files, meta, max_retries=max_retries)
+        raw_response = await self._make_request("/v1/text/recognize", meta, files, max_retries=max_retries)
         return VKCloudVisionResponse(raw_response)
 
     async def scene_text_recognize(
@@ -57,7 +57,7 @@ class VKCloudVisionTextClient(VKCloudVisionBaseClient):
         meta: Dict[str, Any] = {"images": images}  # Expected format: [{"name": str}]
         if lang:
             meta["lang"] = lang  # e.g., "rus", "eng"
-        raw_response = await self._make_request("/v1/scene_text/recognize", files, meta)
+        raw_response = await self._make_request("/v1/scene_text/recognize", meta, files)
         return VKCloudVisionResponse(raw_response)
 
 
@@ -75,7 +75,7 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
             "space": str(space),
             "images": images,  # Expected format: [{"name": str, "person_id": int}]
         }
-        return await self._make_request("/v1/persons/set", files, meta)
+        return await self._make_request("/v1/persons/set", meta, files, max_retries=1)
 
     async def delete(
         self,
@@ -88,12 +88,12 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
             "space": str(space),
             "images": images,  # Expected format: [{"name": str, "person_id": int}]
         }
-        return await self._make_request("/v1/persons/delete", files, meta)
+        return await self._make_request("/v1/persons/delete", meta, files, max_retries=1)
 
     async def truncate(self, space: int) -> Dict[str, Any]:
         """Clear the entire space."""
         meta = {"space": str(space)}
-        return await self._make_request("/v1/persons/truncate", [], meta)
+        return await self._make_request("/v1/persons/truncate", meta, max_retries=1)
 
     async def recognize(
         self,
@@ -110,5 +110,5 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
             "update_embedding": update_embedding,
             "images": images,  # Expected format: [{"name": str}]
         }
-        raw_response = await self._make_request("/v1/persons/recognize", files, meta)
+        raw_response = await self._make_request("/v1/persons/recognize", meta, files)
         return VKCloudVisionFaceRecognitionResponse(raw_response)
