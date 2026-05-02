@@ -47,8 +47,9 @@ DEFAULT_MAX_RETRIES = 5
 DEFAULT_CREATE_NEW = False
 DEFAULT_TRAINING_MODE = False
 
-CONF_FACE_RECOGNITION_SECTION = "face_recognition_section"
 CONF_TRAINING_MODE = "training_mode"
+CONF_TRUNCATE_SPACE = "truncate_space"
+CONF_CONFIRM_TRUNCATE = "confirm_truncate"
 
 SERVICE_DETECT_OBJECTS = "detect_objects"
 SERVICE_RECOGNIZE_TEXT = "recognize_text"

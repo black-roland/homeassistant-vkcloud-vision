@@ -90,14 +90,10 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
         }
         return await self._make_request("/v1/persons/delete", files, meta)
 
-    async def truncate(
-        self,
-        space: int,
-        files: List[bytes],
-    ) -> Dict[str, Any]:
+    async def truncate(self, space: int) -> Dict[str, Any]:
         """Clear the entire space."""
         meta = {"space": str(space)}
-        return await self._make_request("/v1/persons/truncate", files, meta)
+        return await self._make_request("/v1/persons/truncate", [], meta)
 
     async def recognize(
         self,

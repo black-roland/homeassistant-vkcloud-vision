@@ -6,13 +6,13 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from homeassistant import data_entry_flow
 from homeassistant.config_entries import (ConfigEntry, ConfigFlow,
                                           ConfigFlowResult, OptionsFlow)
 
 from .api.vkcloud.auth import VKCloudApiKeyAuth
-from .const import (CONF_API_KEY, CONF_FACE_RECOGNITION_SECTION,
-                    CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE, DOMAIN, LOGGER)
+from .api.vkcloud.vision import VKCloudVision
+from .const import (CONF_API_KEY, CONF_CONFIRM_TRUNCATE, CONF_TRAINING_MODE,
+                    CONF_TRUNCATE_SPACE, DEFAULT_TRAINING_MODE, DOMAIN, LOGGER)
 
 
 class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -104,36 +104,58 @@ class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
 class VKCloudVisionOptionsFlow(OptionsFlow):
     """VK Cloud Vision options flow."""
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        schema = self.vkcloud_vision_config_option_schema()
-        return self.async_show_form(
+    async def async_step_init(self, _user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Show the main menu."""
+        return self.async_show_menu(
             step_id="init",
+            menu_options=["face_recognition", "truncate_space"],
+        )
+
+    async def async_step_face_recognition(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Manage face recognition options (training mode)."""
+        if user_input is not None:
+            new_opts = dict(self.config_entry.options)
+            new_opts[CONF_TRAINING_MODE] = user_input[CONF_TRAINING_MODE]
+            return self.async_create_entry(data=new_opts)
+
+        training_mode = self.config_entry.options.get(CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE)
+
+        schema = vol.Schema({
+            vol.Required(CONF_TRAINING_MODE, default=training_mode): bool,
+        })
+
+        return self.async_show_form(
+            step_id="face_recognition",
             data_schema=schema,
         )
 
-    def vkcloud_vision_config_option_schema(self) -> vol.Schema:
-        """VK Cloud Vision options schema."""
+    async def async_step_truncate_space(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Truncate a person space."""
+        errors: dict[str, str] = {}
 
-        face_recognition_schema = vol.Schema(
-            {
-                vol.Optional(CONF_TRAINING_MODE, default=DEFAULT_TRAINING_MODE): bool,
-            }
-        )
+        if user_input is not None:
+            space = user_input[CONF_TRUNCATE_SPACE]
+            confirm = user_input.get(CONF_CONFIRM_TRUNCATE)
 
-        return self.add_suggested_values_to_schema(
-            vol.Schema(
-                {
-                    vol.Required(CONF_FACE_RECOGNITION_SECTION): data_entry_flow.section(
-                        face_recognition_schema,
-                        {"collapsed": False},
-                    ),
-                }
-            ),
-            self.config_entry.options,
+            if not confirm:
+                errors["base"] = "confirm_truncate"
+            else:
+                client: VKCloudVision = self.config_entry.runtime_data
+                try:
+                    await client.persons.truncate(space)
+                except Exception as err:
+                    errors["base"] = "truncate_failed"
+                    LOGGER.error("Truncate space %s failed: %s", space, err)
+                else:
+                    return self.async_abort(reason="truncate_success")
+
+        data_schema = vol.Schema({
+            vol.Required(CONF_TRUNCATE_SPACE, default=0): vol.Coerce(int),
+            vol.Required(CONF_CONFIRM_TRUNCATE, default=False): bool,
+        })
+
+        return self.async_show_form(
+            step_id="truncate_space",
+            data_schema=data_schema,
+            errors=errors,
         )

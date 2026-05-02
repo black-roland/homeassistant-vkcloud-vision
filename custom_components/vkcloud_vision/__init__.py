@@ -22,8 +22,7 @@ from .api.vkcloud.vision import VKCloudVision
 from .const import (ATTR_BOUNDING_BOXES, ATTR_DETAILED, ATTR_FILE_OUT,
                     ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
                     ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
-                    CONF_API_KEY, CONF_CLIENT_ID,
-                    CONF_FACE_RECOGNITION_SECTION, CONF_REFRESH_TOKEN,
+                    CONF_API_KEY, CONF_CLIENT_ID, CONF_REFRESH_TOKEN,
                     CONF_TRAINING_MODE, DEFAULT_BOUNDING_BOXES,
                     DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
                     DEFAULT_PROB_THRESHOLD, DEFAULT_SNAPSHOT_INTERVAL_SEC,
@@ -103,8 +102,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vision_entity = get_vision_entity(hass)
         vision_entry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
 
-        face_recognition_options = vision_entry.options.get(CONF_FACE_RECOGNITION_SECTION, {})
-        training_mode = face_recognition_options.get(CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE)
+        training_mode = vision_entry.options.get(CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE)
         LOGGER.debug("Trainig mode: %s, create new: %s, update embedding: %s",
                      training_mode,
                      call.data.get("create_new", training_mode),
