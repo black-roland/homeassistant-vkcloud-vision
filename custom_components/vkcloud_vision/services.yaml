@@ -74,6 +74,7 @@ detect_objects:
     #   selector:
     #     config_entry:
     #       integration: vkcloud_vision
+
 recognize_text:
   target:
     entity:
@@ -84,6 +85,7 @@ recognize_text:
       required: false
       selector:
         boolean:
+
 recognize_faces:
   target:
     entity:
@@ -91,10 +93,10 @@ recognize_faces:
   fields:
     space:
       default: 0
-      required: false
+      required: true
       selector:
         number:
-          min: 1
+          min: 0
           max: 9
           mode: box
     create_new:

@@ -26,7 +26,7 @@ from .const import (ATTR_BOUNDING_BOXES, ATTR_DETAILED, ATTR_FILE_OUT,
                     CONF_TRAINING_MODE, DEFAULT_BOUNDING_BOXES,
                     DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
                     DEFAULT_PROB_THRESHOLD, DEFAULT_SNAPSHOT_INTERVAL_SEC,
-                    DEFAULT_TRAINING_MODE, DOMAIN, LOGGER,
+                    DEFAULT_SPACE, DEFAULT_TRAINING_MODE, DOMAIN, LOGGER,
                     SERVICE_DETECT_OBJECTS, SERVICE_RECOGNIZE_FACES,
                     SERVICE_RECOGNIZE_TEXT, VALID_MODES, BoundingBoxesType,
                     ResponseType)
@@ -103,19 +103,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vision_entry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
 
         training_mode = vision_entry.options.get(CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE)
+        create_new = call.data.get("create_new", training_mode)
+        update_embedding = call.data.get("update_embedding", training_mode)
         LOGGER.debug("Trainig mode: %s, create new: %s, update embedding: %s",
-                     training_mode,
-                     call.data.get("create_new", training_mode),
-                     call.data.get("update_embedding", training_mode))
+                     training_mode, create_new, update_embedding)
 
         result = {}
         for camera_id in call.data.get("entity_id", []):
             try:
                 result[camera_id] = await vision_entity.recognize_faces(
                     camera_id,
-                    call.data["space"],
-                    call.data.get("create_new", training_mode),
-                    call.data.get("update_embedding", training_mode),
+                    call.data.get("space", DEFAULT_SPACE),
+                    create_new,
+                    update_embedding,
                 )
             except HomeAssistantError as err:
                 result[camera_id] = {
@@ -170,7 +170,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECOGNIZE_FACES,
         recognize_faces,
         schema=cv.make_entity_service_schema({
-            vol.Required("space"): cv.string,
+            vol.Required("space", default=DEFAULT_SPACE): vol.All(vol.Coerce(int), vol.Range(min=0, max=9)),
             vol.Optional("create_new"): cv.boolean,
             vol.Optional("update_embedding"): cv.boolean,
         }),

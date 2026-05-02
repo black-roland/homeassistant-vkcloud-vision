@@ -8,11 +8,15 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.config_entries import (ConfigEntry, ConfigFlow,
                                           ConfigFlowResult, OptionsFlow)
+from homeassistant.helpers.selector import (NumberSelector,
+                                            NumberSelectorConfig,
+                                            NumberSelectorMode)
 
 from .api.vkcloud.auth import VKCloudApiKeyAuth
 from .api.vkcloud.vision import VKCloudVision
 from .const import (CONF_API_KEY, CONF_CONFIRM_TRUNCATE, CONF_TRAINING_MODE,
-                    CONF_TRUNCATE_SPACE, DEFAULT_TRAINING_MODE, DOMAIN, LOGGER)
+                    CONF_TRUNCATE_SPACE, DEFAULT_SPACE, DEFAULT_TRAINING_MODE,
+                    DOMAIN, LOGGER)
 
 
 class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -134,8 +138,8 @@ class VKCloudVisionOptionsFlow(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            space = user_input[CONF_TRUNCATE_SPACE]
-            confirm = user_input.get(CONF_CONFIRM_TRUNCATE)
+            space = user_input.get(CONF_TRUNCATE_SPACE, DEFAULT_SPACE)
+            confirm = user_input.get(CONF_CONFIRM_TRUNCATE, False)
 
             if not confirm:
                 errors["base"] = "confirm_truncate"
@@ -150,7 +154,12 @@ class VKCloudVisionOptionsFlow(OptionsFlow):
                     return self.async_abort(reason="truncate_success")
 
         data_schema = vol.Schema({
-            vol.Required(CONF_TRUNCATE_SPACE, default=0): vol.Coerce(int),
+            vol.Required(CONF_TRUNCATE_SPACE, default=DEFAULT_SPACE): vol.All(
+                NumberSelector(
+                    NumberSelectorConfig(min=0, max=9, mode=NumberSelectorMode.BOX),
+                ),
+                vol.Coerce(int),
+            ),
             vol.Required(CONF_CONFIRM_TRUNCATE, default=False): bool,
         })
 
