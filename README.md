@@ -1,5 +1,5 @@
 <div align="center">
-  <sub><sup>See <a href="#vk-cloud-vision-for-home-assistant">description in English</a> below 👇</sub></sup>
+  See <a href="#vk-cloud-vision-for-home-assistant">description in English</a> below 👇
   <br>
   <br>
 </div>
@@ -16,6 +16,7 @@
 ## Возможности
 
 - **Распознавание объектов** (людей, животных) и **автомобильных номеров**.
+- **Распознавание лиц**: определение уже знакомых людей и автоматическое добавление новых лиц в базу.
 - **Распознавание текста** (OCR): например, надписей на автомобилях.
 - Сохранение стоп-кадров с разметкой обнаруженных объектов.
 - Blueprints для реализации распространённых сценариев.
@@ -32,8 +33,8 @@ VK Cloud Vision — это облачный сервис, плата за кот
 ### Подготовка
 
 1. Зарегистрируйтесь в [VK Cloud](https://cloud.vk.com/app/signup/).
-3. Создайте токен в разделе «[Доступ через сервисные токены](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/)».
-4. Сохраните полученный ключ.
+2. Создайте токен в разделе «[Доступ через сервисные токены](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/)».
+3. Сохраните полученный ключ.
 
 ### Установка
 
@@ -143,6 +144,37 @@ data:
   bounding_boxes: rus
 ```
 
+### `vkcloud_vision.recognize_faces`
+
+Определяет лица на изображении, сравнивает их с сохранёнными в базе, а при включённом режиме обучения автоматически сохраняет новые лица.
+
+Параметры:
+
+- **space** (обязательное) — числовой идентификатор пространства. В каждом пространстве хранится свой набор лиц, что удобно для разделения сценариев: например, space 0 для домашних, а space 1 для офиса.
+- **create_new** (необязательное) — если `true`, то новые лица будут автоматически добавляться в пространство. Значение по умолчанию зависит от галочки «Режим обучения» в параметрах интеграции.
+- **update_embedding** (необязательное) — если `true`, то векторное представление лица обновляется при каждом совпадении, улучшая точность распознавания в будущем. Отключите для изображений низкого качества. Значение по умолчанию зависит от настройки «Режим обучения».
+
+Действие возвращает структурированный ответ со списком найденных лиц, координатами, степенью похожести и дополнительными атрибутами (пол, возраст, эмоции).
+
+
+Пример использования:
+
+```yaml
+action: vkcloud_vision.recognize_faces
+target:
+  entity_id: camera.front_door
+data:
+  space: 0
+```
+
+#### Настройка режима обучения
+
+Режим обучения включается в параметрах интеграции (*Настройки → Устройства и службы → VK Cloud Vision → Настроить → Распознавание лиц*). Когда режим активен, оба параметра (`create_new` и `update_embedding`) по умолчанию включены. Вы по-прежнему можете переопределить их в явном виде при вызове действия.
+
+#### Очистка пространства
+
+В параметрах интеграции также доступна опция *Очистка базы лиц*, которая полностью удаляет все данные из выбранного пространства.
+
 ### `vkcloud_vision.recognize_text`
 
 Распознает текст на изображениях с камеры (например, надписи на автомобилях).
@@ -189,6 +221,7 @@ This integration brings cloud-based object and text recognition to Home Assistan
 ## Key Features
 
 - **Object and license plate detection** using the `vkcloud_vision.detect_objects` action.
+- **Face recognition** with person identification and automatic enrollment of new faces.
 - **Text recognition** on images (e.g., vehicle inscriptions) using the `vkcloud_vision.recognize_text` action.
 - Create automations based on image analysis from surveillance cameras.
 - Save snapshots with annotations of detected objects.
@@ -197,13 +230,9 @@ This integration brings cloud-based object and text recognition to Home Assistan
 
 ### Prerequisites
 
-**Register with VK Cloud**:
-- Sign up at [VK Cloud](https://cloud.vk.com/app/signup/).
-- Activate the Vision service in the [dashboard](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/).
-- Generate access keys in the **AI API → Vision API** section:
-  - **Client ID**.
-  - **Client Secret**.
-- Save the keys for integration setup.
+1. Sign up at [VK Cloud](https://cloud.vk.com/app/signup/).
+2. Create a token in the **Service Tokens** section ([link](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/)).
+3. Save the generated key.
 
 ### Installation
 
@@ -216,7 +245,7 @@ This integration brings cloud-based object and text recognition to Home Assistan
 ### Configuration
 
 1. Go to **Settings → Devices & Services → Add Integration** or use the [configuration button](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloud_vision).
-2. Enter the **Client ID** and **Client Secret** obtained from VK Cloud.
+2. Enter the **Service Token** obtained from VK Cloud.
 3. Save the configuration and restart Home Assistant if prompted.
 
 ## Donations
