@@ -26,6 +26,10 @@ ATTR_BOUNDING_BOXES = "bounding_boxes"
 ATTR_NUM_SNAPSHOTS = "num_snapshots"
 ATTR_SNAPSHOT_INTERVAL_SEC = "snapshot_interval_sec"
 ATTR_MAX_RETRIES = "max_retries"
+ATTR_SPACE = "space"
+ATTR_CREATE_NEW = "create_new"
+ATTR_UPDATE_EMBEDDING = "update_embedding"
+ATTR_CONFIDENCE_THRESHOLD = "confidence_threshold"
 
 VALID_MODES = [
     "object",
@@ -40,6 +44,7 @@ VALID_MODES = [
 
 DEFAULT_MODES = ["multiobject"]
 DEFAULT_PROB_THRESHOLD = 0.1
+DEFAULT_CONFIDENCE_THRESHOLD = 0.1
 DEFAULT_BOUNDING_BOXES = "rus"
 DEFAULT_NUM_SNAPSHOTS = 1
 DEFAULT_SNAPSHOT_INTERVAL_SEC = .5
