@@ -91,6 +91,7 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
         images: List[Dict[str, str]],
         create_new: bool = False,
         update_embedding: bool = True,
+        confidence_threshold: float = 0.1,
     ) -> VKCloudVisionFaceRecognitionResponse:
         """Recognize a person in a photo."""
         meta = {
@@ -100,4 +101,4 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
             "images": images,  # Expected format: [{"name": str}]
         }
         raw_response = await self._make_request("/v1/persons/recognize", meta, files)
-        return VKCloudVisionFaceRecognitionResponse(raw_response)
+        return VKCloudVisionFaceRecognitionResponse(raw_response, confidence_threshold=confidence_threshold)

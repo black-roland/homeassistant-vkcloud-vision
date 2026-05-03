@@ -161,7 +161,8 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         }
 
     async def recognize_faces(
-            self, camera_id: str, space: int, create_new: bool, update_embedding: bool) -> JsonObjectType:
+            self, camera_id: str, space: int, create_new: bool,
+            update_embedding: bool, confidence_threshold: float) -> JsonObjectType:
         """Recognize faces in an image."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
@@ -176,6 +177,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 images=[image_meta],
                 create_new=create_new,
                 update_embedding=update_embedding,
+                confidence_threshold=confidence_threshold,
             )
         except Exception as err:
             raise HomeAssistantError(f"Face recognition error: {err}") from err
