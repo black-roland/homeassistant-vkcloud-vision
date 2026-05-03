@@ -12,9 +12,10 @@ from homeassistant.helpers.selector import (NumberSelector,
                                             NumberSelectorConfig,
                                             NumberSelectorMode)
 
-from .api.vkcloud.auth import VKCloudApiKeyAuth
+from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (CONF_API_KEY, CONF_CONFIRM_TRUNCATE, CONF_TRAINING_MODE,
+from .const import (CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_CONFIRM_TRUNCATE,
+                    CONF_REFRESH_TOKEN, CONF_TRAINING_MODE,
                     CONF_TRUNCATE_SPACE, DEFAULT_SPACE, DEFAULT_TRAINING_MODE,
                     DOMAIN, LOGGER)
 
@@ -22,21 +23,32 @@ from .const import (CONF_API_KEY, CONF_CONFIRM_TRUNCATE, CONF_TRAINING_MODE,
 class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VK Cloud Vision."""
 
-    VERSION = 2
+    VERSION = 3
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Handle initial setup (static API key only)."""
+        """Handle the initial step (OAuth only for new users)."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            api_key = user_input[CONF_API_KEY].strip()
+            client_id = user_input[CONF_CLIENT_ID].strip()
+            client_secret = user_input[CONF_CLIENT_SECRET].strip()
             try:
-                # Minimal validation
-                auth = VKCloudApiKeyAuth(self.hass, api_key)
-                await auth.get_access_token()  # just ensures it's non-empty
+                # Validate OAuth credentials
+                auth = VKCloudAuth(
+                    self.hass,
+                    client_id=client_id,
+                    client_secret=client_secret,
+                )
+                await auth.get_access_token()
+                refresh_token = auth.get_refresh_token()
+                if not refresh_token:
+                    raise Exception("No refresh token received from OAuth server")
                 return self.async_create_entry(
                     title="VK Cloud Vision",
-                    data={CONF_API_KEY: api_key},
+                    data={
+                        CONF_CLIENT_ID: client_id,
+                        CONF_REFRESH_TOKEN: refresh_token,
+                    },
                 )
             except Exception as e:  # noqa: BLE001
                 errors["base"] = "invalid_auth"
@@ -44,7 +56,10 @@ class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=vol.Schema({
+                vol.Required(CONF_CLIENT_ID): str,
+                vol.Required(CONF_CLIENT_SECRET): str,
+            }),
             errors=errors,
             description_placeholders={
                 "obtain_token_url": "https://msk.cloud.vk.com/app/services/machinelearning/vision/access/"
@@ -52,22 +67,34 @@ class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Handle reconfiguration (change API key)."""
+        """Handle reconfiguration (force OAuth credentials)."""
         entry: ConfigEntry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]  # type: ignore[index]
         )
 
         errors: dict[str, str] = {}
+        current_client_id = entry.data.get(CONF_CLIENT_ID, "")
 
         if user_input is not None:
-            api_key = user_input[CONF_API_KEY].strip()
+            client_id = user_input.get(CONF_CLIENT_ID, current_client_id).strip()
+            client_secret = user_input[CONF_CLIENT_SECRET].strip()
             try:
-                auth = VKCloudApiKeyAuth(self.hass, api_key)
+                auth = VKCloudAuth(
+                    self.hass,
+                    client_id=client_id,
+                    client_secret=client_secret,
+                )
                 await auth.get_access_token()
-                # Update entry to new static-key format (removes old OAuth data)
+                refresh_token = auth.get_refresh_token()
+                if not refresh_token:
+                    raise Exception("No refresh token received from OAuth server")
+                # Update to OAuth format (removes any existing static token)
                 self.hass.config_entries.async_update_entry(
                     entry,
-                    data={CONF_API_KEY: api_key},
+                    data={
+                        CONF_CLIENT_ID: client_id,
+                        CONF_REFRESH_TOKEN: refresh_token,
+                    },
                     version=self.VERSION,
                 )
                 self.hass.config_entries.async_schedule_reload(entry.entry_id)
@@ -76,13 +103,12 @@ class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
                 LOGGER.exception("Reconfiguration error", exc_info=e)
 
-        # Pre-fill with current key if it exists
-        current_key = entry.data.get(CONF_API_KEY, "")
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_API_KEY, default=current_key): str}
-            ),
+            data_schema=vol.Schema({
+                vol.Required(CONF_CLIENT_ID, default=current_client_id): str,
+                vol.Required(CONF_CLIENT_SECRET): str,
+            }),
             errors=errors,
             description_placeholders={
                 "obtain_token_url": "https://msk.cloud.vk.com/app/services/machinelearning/vision/access/"

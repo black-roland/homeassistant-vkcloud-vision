@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import (EntityServiceResponse, HomeAssistant,
                                 ServiceCall, SupportsResponse)
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -183,14 +183,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    if not entry.data.get(CONF_API_KEY):
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="reauth_required",
-            translation_placeholders={
-                "github_issue_url": "https://github.com/black-roland/homeassistant-vkcloud-vision/issues/9"}
-        )
-
     auth_client = VKCloudAuth(
         hass,
         api_key=entry.data.get(CONF_API_KEY),
@@ -209,13 +201,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 # Migration (keeps old OAuth entries working until user reconfigures)
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate config entry to version 2 (static key)."""
+    """Migrate config entry to latest version."""
     if config_entry.version == 1:
-        # We cannot auto-convert the key – user must reconfigure.
-        # Just bump version; old data is still present so OAuth path works.
+        # v1 → v2: Bump version, keep OAuth data
         new_data = dict(config_entry.data)
-        hass.config_entries.async_update_entry(config_entry, version=2, data=new_data)
-        LOGGER.info("Migrated VK Cloud Vision config entry to v2 (OAuth still works until reconfigured)")
+        hass.config_entries.async_update_entry(config_entry, version=3, data=new_data)
+        LOGGER.info("Migrated VK Cloud Vision config entry from v1")
+
+    if config_entry.version == 2:
+        # v2 → v3: Bump version, no data changes (supports both auth types)
+        new_data = dict(config_entry.data)
+        hass.config_entries.async_update_entry(config_entry, version=3, data=new_data)
+        LOGGER.info("Migrated VK Cloud Vision config entry from v2")
         return True
 
     return False

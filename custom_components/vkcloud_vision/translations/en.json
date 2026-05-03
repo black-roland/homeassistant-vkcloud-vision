@@ -3,25 +3,27 @@
     "step": {
       "user": {
         "title": "VK Cloud Vision Authentication",
-        "description": "Enter your [static service token]({obtain_token_url}).",
+        "description": "Enter your [VK Cloud Vision API credentials]({obtain_token_url}).",
         "data": {
-          "api_key": "Service token"
+          "client_id": "Client ID",
+          "client_secret": "Client secret"
         }
       },
       "reconfigure": {
         "title": "Reconfigure VK Cloud Vision",
-        "description": "Update your [static service token]({obtain_token_url}).",
+        "description": "Enter your [VK Cloud Vision API credentials]({obtain_token_url}).",
         "data": {
-          "api_key": "Service token"
+          "client_id": "Client ID",
+          "client_secret": "Client secret"
         }
       }
     },
     "error": {
-      "invalid_auth": "Invalid API key"
+      "invalid_auth": "Authentication failed"
     },
     "abort": {
       "already_configured": "VK Cloud Vision is already configured",
-      "reconfigure_successful": "Token was successfully updated"
+      "reconfigure_successful": "Credentials updated successfully"
     }
   },
   "options": {
@@ -145,7 +147,7 @@
   },
   "exceptions": {
     "reauth_required": {
-      "message": "Please re-authenticate using the service token. Issue details: {github_issue_url}."
+      "message": "Please re-authenticate with your VK Cloud Vision credentials. Issue details: {github_issue_url}."
     }
   }
 }

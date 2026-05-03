@@ -171,3 +171,9 @@ class VKCloudAuth:
 
     async def get_access_token(self) -> str:
         return await self._impl.get_access_token()
+
+    def get_refresh_token(self) -> Optional[str]:
+        """Return the refresh token if using OAuth, otherwise None."""
+        if isinstance(self._impl, VKCloudOAuthAuth):
+            return self._impl.get_refresh_token()
+        return None

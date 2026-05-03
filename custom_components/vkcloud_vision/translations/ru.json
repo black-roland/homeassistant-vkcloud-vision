@@ -3,25 +3,27 @@
     "step": {
       "user": {
         "title": "Аутентификация в VK Cloud Vision",
-        "description": "Введите [статический сервисный токен]({obtain_token_url}).",
+        "description": "Введите [данные для доступа к API VK Cloud Vision]({obtain_token_url}).",
         "data": {
-          "api_key": "Сервисный токен"
+          "client_id": "Идентификатор клиента",
+          "client_secret": "Секретный ключ"
         }
       },
       "reconfigure": {
-        "title": "Обновление авторизационного токена",
-        "description": "Укажите новый [сервисный токен]({obtain_token_url}).",
+        "title": "Перенастройка VK Cloud Vision",
+        "description": "Введите [данные для доступа к API VK Cloud Vision]({obtain_token_url}).",
         "data": {
-          "api_key": "Сервисный токен"
+          "client_id": "Идентификатор клиента",
+          "client_secret": "Секретный ключ"
         }
       }
     },
     "error": {
-      "invalid_auth": "Недействительный API-ключ"
+      "invalid_auth": "Ошибка аутентификации"
     },
     "abort": {
       "already_configured": "VK Cloud Vision уже настроен",
-      "reconfigure_successful": "Токен успешно обновлён"
+      "reconfigure_successful": "Учетные данные успешно обновлены"
     }
   },
   "options": {
@@ -145,7 +147,7 @@
   },
   "exceptions": {
     "reauth_required": {
-      "message": "Пожалуйста переавторизуйтесь, используя сервисный токен. Подробнее о проблеме: {github_issue_url}"
+      "message": "Пожалуйста, переавторизуйтесь, используя данные для доступа к VK Cloud Vision. Подробнее: {github_issue_url}"
     }
   }
 }
