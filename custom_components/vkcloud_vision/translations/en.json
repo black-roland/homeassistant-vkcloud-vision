@@ -97,11 +97,11 @@
     },
     "recognize_text": {
       "name": "Recognize Text",
-      "description": "Recognize text in images.",
+      "description": "Recognize text in scene photos.",
       "fields": {
-        "detailed": {
-          "name": "Detailed Results",
-          "description": "Return detailed recognition results with coordinates and confidence scores."
+        "lang": {
+          "name": "Language",
+          "description": "Specify the language for better recognition accuracy. Defaults to auto-detect if not specified."
         }
       }
     },
@@ -142,6 +142,12 @@
         "no_labels": "No labels",
         "rus": "Russian labels",
         "eng": "English labels"
+      }
+    },
+    "lang": {
+      "options": {
+        "rus": "Russian",
+        "eng": "English"
       }
     }
   },

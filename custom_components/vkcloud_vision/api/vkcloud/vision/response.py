@@ -9,8 +9,8 @@ from typing import List, cast
 from homeassistant.util.json import JsonObjectType, JsonValueType
 
 
-class VKCloudVisionResponse:
-    """Class to handle and parse VK Cloud Vision API responses."""
+class VKCloudVisionObjectDetectionResponse:
+    """Class to handle and parse VK Cloud Vision object detection API responses."""
 
     def __init__(self, raw_response: JsonObjectType, prob_threshold: float = 0.1):
         """Initialize with API response."""
@@ -117,3 +117,61 @@ class VKCloudVisionFaceRecognitionResponse:
             self._errors.append(f"{obj.get('name', 'unknown')}: {obj.get('error', 'unknown')}")
 
         self._persons = obj.get("persons", [])
+
+
+class VKCloudVisionTextRecognitionResponse:
+    """Parse response from /v1/scene_text/recognize."""
+
+    def __init__(self, raw_response: dict):
+        self._objects: list[dict] = []
+        self._errors: list[str] = []
+        self._parse_response(raw_response)
+
+    @property
+    def data(self) -> JsonObjectType:
+        """Return the processed API response data."""
+        return {"objects": cast(JsonValueType, self._objects)}
+
+    @property
+    def words(self) -> list[dict]:
+        """Return raw words array for the first image."""
+        if self._objects and len(self._objects) > 0:
+            return self._objects[0].get("words", [])
+        return []
+
+    @property
+    def text(self) -> str | None:
+        """Return joined text string for the first image (backward compatible)."""
+        if self._objects and len(self._objects) > 0:
+            return self._objects[0].get("text", "")
+        return None
+
+    @property
+    def has_errors(self) -> bool:
+        return bool(self._errors)
+
+    @property
+    def error_message(self) -> str | None:
+        return "; ".join(self._errors) if self._errors else None
+
+    def _parse_response(self, response: JsonObjectType) -> None:
+        """Parse text recognition response objects."""
+        objects = response.get("objects", [])
+        if not objects:
+            return
+
+        for obj in cast(List[dict], objects):
+            status = obj.get("status", 0)
+            name = obj.get("name", "unknown")
+            if status != 0:
+                self._errors.append(f"{name}: {obj.get('error', 'unknown error')}")
+
+            words = obj.get("words", [])
+
+            # Generate backward-compatible text by joining word["text"] with newlines
+            text = "\n".join([word.get("text", "") for word in words if "text" in word])
+
+            processed_obj = obj.copy()
+            processed_obj["words"] = words
+            processed_obj["text"] = text
+            self._objects.append(processed_obj)

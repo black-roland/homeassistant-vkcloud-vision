@@ -134,7 +134,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
             "error": response.error_message,
         }
 
-    async def recognize_text(self, camera_id: str, mode: str | None) -> JsonObjectType:
+    async def recognize_text(self, camera_id: str, lang: str | None) -> JsonObjectType:
         """Recognize text in an image."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
@@ -143,10 +143,10 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         image_meta = {"name": split_entity_id(camera_id)[1]}
 
         try:
-            response = await client.text.recognize(
+            response = await client.text.scene_text_recognize(
                 files=[image_data],
                 images=[image_meta],
-                mode=mode,
+                lang=lang,
             )
         except Exception as err:
             raise HomeAssistantError(f"Text recognition error: {err}") from err

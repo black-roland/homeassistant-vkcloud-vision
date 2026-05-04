@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (ATTR_BOUNDING_BOXES, ATTR_DETAILED, ATTR_FILE_OUT,
+from .const import (ATTR_BOUNDING_BOXES, ATTR_FILE_OUT, ATTR_LANG,
                     ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
                     ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
                     CONF_API_KEY, CONF_CLIENT_ID, CONF_REFRESH_TOKEN,
@@ -82,13 +82,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def recognize_text(call: ServiceCall) -> EntityServiceResponse:
         """Recognize text in images from multiple cameras."""
         vision_entity = get_vision_entity(hass)
-        mode = "detailed" if call.data.get(ATTR_DETAILED) else None
+        lang = call.data.get(ATTR_LANG)
 
         # FIXME: Workaround to process multiple entities in a way `entity_service_call` does
         result = {}
         for camera_id in call.data.get("entity_id", []):
             try:
-                result[camera_id] = await vision_entity.recognize_text(camera_id, mode)
+                result[camera_id] = await vision_entity.recognize_text(camera_id, lang)
             except HomeAssistantError as err:
                 result[camera_id] = {
                     "response": None,
@@ -160,7 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECOGNIZE_TEXT,
         recognize_text,
         schema=cv.make_entity_service_schema({
-            vol.Optional(ATTR_DETAILED): bool,
+            vol.Optional(ATTR_LANG): vol.In(["rus", "eng"]),
         }),
         supports_response=SupportsResponse.ONLY,
     )
