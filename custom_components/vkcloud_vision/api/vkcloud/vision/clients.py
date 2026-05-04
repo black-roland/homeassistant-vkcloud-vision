@@ -19,7 +19,7 @@ class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
         modes: List[str],
         images: List[Dict[str, str]],
         prob_threshold: float,
-        max_retries: int = 5,
+        max_retries: int = 3,
     ) -> VKCloudVisionObjectDetectionResponse:
         """Detect objects in a photo."""
         meta = {
@@ -38,7 +38,7 @@ class VKCloudVisionTextClient(VKCloudVisionBaseClient):
         files: List[bytes],
         images: List[Dict[str, str]],
         lang: Optional[str] = None,
-        max_retries: int = 5,
+        max_retries: int = 3,
     ) -> VKCloudVisionTextRecognitionResponse:
         """Recognize text in scene photos."""
         images_meta = [
@@ -92,6 +92,7 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
         create_new: bool = False,
         update_embedding: bool = True,
         confidence_threshold: float = 0.1,
+        max_retries: int = 3,
     ) -> VKCloudVisionFaceRecognitionResponse:
         """Recognize a person in a photo."""
         meta = {
@@ -100,5 +101,5 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
             "update_embedding": update_embedding,
             "images": images,  # Expected format: [{"name": str}]
         }
-        raw_response = await self._make_request("/v1/persons/recognize", meta, files)
+        raw_response = await self._make_request("/v1/persons/recognize", meta, files, max_retries=max_retries)
         return VKCloudVisionFaceRecognitionResponse(raw_response, confidence_threshold=confidence_threshold)

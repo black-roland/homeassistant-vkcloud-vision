@@ -52,7 +52,6 @@ detect_objects:
           max: 100
           mode: box
     snapshot_interval_sec:
-      default: 0.5
       required: false
       selector:
         number:
@@ -62,7 +61,6 @@ detect_objects:
           unit_of_measurement: seconds
           mode: slider
     max_retries:
-      default: 5
       required: false
       selector:
         number:
@@ -105,6 +103,13 @@ recognize_faces:
           max: 1.0
           step: 0.01
           mode: slider
+    max_retries:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 10
+          mode: box
 
 recognize_text:
   target:
@@ -119,3 +124,10 @@ recognize_text:
             - rus
             - eng
           translation_key: lang
+    max_retries:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 10
+          mode: box

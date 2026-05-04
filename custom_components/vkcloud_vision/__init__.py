@@ -84,13 +84,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def recognize_text(call: ServiceCall) -> EntityServiceResponse:
         """Recognize text in images from multiple cameras."""
         vision_entity = get_vision_entity(hass)
-        lang = call.data.get(ATTR_LANG)
 
         # FIXME: Workaround to process multiple entities in a way `entity_service_call` does
         result = {}
         for camera_id in call.data.get("entity_id", []):
             try:
-                result[camera_id] = await vision_entity.recognize_text(camera_id, lang)
+                result[camera_id] = await vision_entity.recognize_text(
+                    camera_id,
+                    call.data.get(ATTR_LANG),
+                    call.data.get(ATTR_MAX_RETRIES, DEFAULT_MAX_RETRIES)
+                )
             except HomeAssistantError as err:
                 result[camera_id] = {
                     "response": None,
@@ -119,6 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     create_new,
                     update_embedding,
                     call.data.get(ATTR_CONFIDENCE_THRESHOLD, DEFAULT_CONFIDENCE_THRESHOLD),
+                    call.data.get(ATTR_MAX_RETRIES, DEFAULT_MAX_RETRIES),
                 )
             except HomeAssistantError as err:
                 result[camera_id] = {
@@ -164,6 +168,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         recognize_text,
         schema=cv.make_entity_service_schema({
             vol.Optional(ATTR_LANG): vol.In(["rus", "eng"]),
+            vol.Optional(
+                ATTR_MAX_RETRIES, default=DEFAULT_MAX_RETRIES
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
         }),
         supports_response=SupportsResponse.ONLY,
     )
@@ -179,6 +186,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(
                 ATTR_CONFIDENCE_THRESHOLD, default=DEFAULT_CONFIDENCE_THRESHOLD
             ): vol.All(vol.Coerce(float), vol.Range(min=0.01, max=1.0)),
+            vol.Optional(
+                ATTR_MAX_RETRIES, default=DEFAULT_MAX_RETRIES
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
         }),
         supports_response=SupportsResponse.ONLY,
     )

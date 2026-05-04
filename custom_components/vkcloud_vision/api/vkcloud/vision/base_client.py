@@ -43,7 +43,7 @@ class VKCloudVisionBaseClient:
         meta: Dict[str, Any],
         files: Optional[List[bytes]] = None,
         params: Optional[Dict[str, Any]] = None,
-        max_retries: int = 5,
+        max_retries: int = 3,
     ) -> JsonObjectType:
         """Make an API request with multipart/form-data."""
         access_token = await self._auth.get_access_token()
