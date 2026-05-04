@@ -17,7 +17,7 @@
 
 - **Распознавание объектов** (людей, животных) и **автомобильных номеров**.
 - **Распознавание лиц**: определение уже знакомых людей и автоматическое добавление новых лиц в базу.
-- **Распознавание текста** (OCR): например, надписей на автомобилях.
+- **Распознавание текста**: например, надписей на автомобилях и других объектах.
 - Сохранение стоп-кадров с разметкой обнаруженных объектов.
 - Blueprints для реализации распространённых сценариев.
 
@@ -174,11 +174,11 @@ data:
 
 ### `vkcloud_vision.recognize_text`
 
-Распознает текст на изображениях с камеры (например, надписи на автомобилях).
+Распознает текст на снимках с камеры (например, надписи на автомобилях и других объектах).
 
 Параметры:
 
-- **detailed** (необязательное, по умолчанию `false`): Если `true`, возвращает подробные результаты с координатами текста и оценкой достоверности.
+- **lang** (необязательное): Язык текста для повышения точности распознавания. Доступные значения: `rus` (русский), `eng` (английский). По умолчанию используется автоопределение.
 
 Пример использования:
 
@@ -187,7 +187,7 @@ action: vkcloud_vision.recognize_text
 target:
   entity_id: camera.front_door
 data:
-  detailed: true
+  lang: rus
 ```
 
 ## Поддержка автора
@@ -219,7 +219,7 @@ This integration brings cloud-based object and text recognition to Home Assistan
 
 - **Object and license plate detection** using the `vkcloud_vision.detect_objects` action.
 - **Face recognition** with person identification and automatic enrollment of new faces.
-- **Text recognition** on images (e.g., vehicle inscriptions) using the `vkcloud_vision.recognize_text` action.
+- **Text recognition** on scene photos (e.g., vehicle inscriptions) using the `vkcloud_vision.recognize_text` action.
 - Create automations based on image analysis from surveillance cameras.
 - Save snapshots with annotations of detected objects.
 
