@@ -91,7 +91,7 @@
         },
         "max_retries": {
           "name": "Maximum Retries",
-          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 5."
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 3."
         }
       }
     },
@@ -102,6 +102,10 @@
         "lang": {
           "name": "Language",
           "description": "Specify the language for better recognition accuracy. Defaults to auto-detect if not specified."
+        },
+        "max_retries": {
+          "name": "Maximum Retries",
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 3."
         }
       }
     },
@@ -124,6 +128,10 @@
         "confidence_threshold": {
           "name": "Confidence Threshold",
           "description": "Minimum confidence score for the face detector to consider a detection as a face. Defaults to 0.1 (10%)."
+        },
+        "max_retries": {
+          "name": "Maximum Retries",
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 3."
         }
       }
     }

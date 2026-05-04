@@ -134,7 +134,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
             "error": response.error_message,
         }
 
-    async def recognize_text(self, camera_id: str, lang: str | None) -> JsonObjectType:
+    async def recognize_text(self, camera_id: str, lang: str | None, max_retries: int) -> JsonObjectType:
         """Recognize text in an image."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
@@ -147,6 +147,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 files=[image_data],
                 images=[image_meta],
                 lang=lang,
+                max_retries=max_retries,
             )
         except Exception as err:
             raise HomeAssistantError(f"Text recognition error: {err}") from err
@@ -162,7 +163,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
 
     async def recognize_faces(
             self, camera_id: str, space: int, create_new: bool,
-            update_embedding: bool, confidence_threshold: float) -> JsonObjectType:
+            update_embedding: bool, confidence_threshold: float, max_retries: int) -> JsonObjectType:
         """Recognize faces in an image."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
@@ -178,6 +179,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 create_new=create_new,
                 update_embedding=update_embedding,
                 confidence_threshold=confidence_threshold,
+                max_retries=max_retries,
             )
         except Exception as err:
             raise HomeAssistantError(f"Face recognition error: {err}") from err
