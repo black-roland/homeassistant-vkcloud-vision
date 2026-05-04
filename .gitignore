@@ -170,5 +170,9 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
+# AI agents
+.kilo
+
 # PyPI configuration file
 .pypirc
+
