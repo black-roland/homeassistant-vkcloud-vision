@@ -4,7 +4,7 @@ detect_objects:
       domain: camera
   fields:
     modes:
-      default: ["multiobject"]
+      default: [ "multiobject" ]
       required: false
       selector:
         select:
@@ -52,7 +52,7 @@ detect_objects:
           max: 100
           mode: box
     snapshot_interval_sec:
-      default: .5
+      default: 0.5
       required: false
       selector:
         number:
@@ -75,17 +75,6 @@ detect_objects:
     #     config_entry:
     #       integration: vkcloud_vision
 
-recognize_text:
-  target:
-    entity:
-      domain: camera
-  fields:
-    detailed:
-      default: false
-      required: false
-      selector:
-        boolean:
-
 recognize_faces:
   target:
     entity:
@@ -107,3 +96,17 @@ recognize_faces:
       required: false
       selector:
         boolean:
+
+recognize_text:
+  target:
+    entity:
+      domain: camera
+  fields:
+    lang:
+      required: false
+      selector:
+        select:
+          options:
+            - rus
+            - eng
+          translation_key: lang

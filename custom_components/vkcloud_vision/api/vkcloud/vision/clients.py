@@ -6,7 +6,8 @@ from typing import Any, Dict, List, Optional
 
 from .base_client import VKCloudVisionBaseClient
 from .response import (VKCloudVisionFaceRecognitionResponse,
-                       VKCloudVisionResponse)
+                       VKCloudVisionObjectDetectionResponse,
+                       VKCloudVisionTextRecognitionResponse)
 
 
 class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
@@ -19,32 +20,18 @@ class VKCloudVisionObjectsClient(VKCloudVisionBaseClient):
         images: List[Dict[str, str]],
         prob_threshold: float,
         max_retries: int = 5,
-    ) -> VKCloudVisionResponse:
+    ) -> VKCloudVisionObjectDetectionResponse:
         """Detect objects in a photo."""
         meta = {
             "mode": modes,  # e.g., ["object", "object2", "scene"]
             "images": images,  # Expected format: [{"name": str}]
         }
         raw_response = await self._make_request("/v1/objects/detect", meta, files, max_retries=max_retries)
-        return VKCloudVisionResponse(raw_response=raw_response, prob_threshold=prob_threshold)
+        return VKCloudVisionObjectDetectionResponse(raw_response=raw_response, prob_threshold=prob_threshold)
 
 
 class VKCloudVisionTextClient(VKCloudVisionBaseClient):
     """Client for text-related VK Cloud Vision API endpoints."""
-
-    async def recognize(
-        self,
-        files: List[bytes],
-        images: List[Dict[str, str]],
-        mode: Optional[str] = None,
-        max_retries: int = 5,
-    ) -> VKCloudVisionResponse:
-        """Recognize text in a document."""
-        meta: Dict[str, Any] = {"images": images}  # Expected format: [{"name": str}]
-        if mode:
-            meta["mode"] = mode  # e.g., "detailed"
-        raw_response = await self._make_request("/v1/text/recognize", meta, files, max_retries=max_retries)
-        return VKCloudVisionResponse(raw_response)
 
     async def scene_text_recognize(
         self,
@@ -52,13 +39,15 @@ class VKCloudVisionTextClient(VKCloudVisionBaseClient):
         images: List[Dict[str, str]],
         lang: Optional[str] = None,
         max_retries: int = 5,
-    ) -> VKCloudVisionResponse:
+    ) -> VKCloudVisionTextRecognitionResponse:
         """Recognize text in scene photos."""
-        meta: Dict[str, Any] = {"images": images}  # Expected format: [{"name": str}]
-        if lang:
-            meta["lang"] = lang  # e.g., "rus", "eng"
-        raw_response = await self._make_request("/v1/scene_text/recognize", meta, files)
-        return VKCloudVisionResponse(raw_response)
+        images_meta = [
+            {"name": img["name"], **({"lang": lang} if lang else {})}
+            for img in images
+        ]
+        meta: Dict[str, Any] = {"images": images_meta}
+        raw_response = await self._make_request("/v1/scene_text/recognize", meta, files, max_retries=max_retries)
+        return VKCloudVisionTextRecognitionResponse(raw_response)
 
 
 class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):

@@ -20,7 +20,7 @@ CONF_REFRESH_TOKEN = "refresh_token"
 
 ATTR_MODES = "modes"
 ATTR_PROB_THRESHOLD = "prob_threshold"
-ATTR_DETAILED = "detailed"
+ATTR_LANG = "lang"
 ATTR_FILE_OUT = "file_out"
 ATTR_BOUNDING_BOXES = "bounding_boxes"
 ATTR_NUM_SNAPSHOTS = "num_snapshots"
