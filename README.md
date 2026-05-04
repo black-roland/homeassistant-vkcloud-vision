@@ -33,15 +33,15 @@ VK Cloud Vision — это облачный сервис, плата за кот
 ### Подготовка
 
 1. Зарегистрируйтесь в [VK Cloud](https://cloud.vk.com/app/signup/).
-2. Создайте токен в разделе «[Доступ через сервисные токены](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/)».
-3. Сохраните полученный ключ.
+2. Получите **Идентификатор клиента** и **Секретный ключ** в разделе «[Доступ через идентификатор клиента и секретный ключ](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/)».
+3. Сохраните полученные данные.
 
 ### Установка
 
 1. [Скачайте интеграцию](https://my.home-assistant.io/redirect/hacs_repository/?owner=black-roland&repository=homeassistant-vkcloud-vision&category=integration) через HACS.
 2. Перезапустите Home Assistant.
 3. Перейдите в **Настройки → Устройства и службы → Добавить интеграцию** или используйте [кнопку настройки](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloud_vision).
-4. Введите **Сервисный токен**, полученный в личном кабинете VK Cloud.
+4. Введите **Идентификатор клиента** и **Секретный ключ**, полученные в личном кабинете VK Cloud.
 
 ## Использование на практике
 
@@ -242,8 +242,8 @@ This integration brings cloud-based object and text recognition to Home Assistan
 ### Prerequisites
 
 1. Sign up at [VK Cloud](https://cloud.vk.com/app/signup/).
-2. Create a token in the **Service Tokens** section ([link](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/)).
-3. Save the generated key.
+2. Get **Client ID** and **Client Secret** in the [dashboard](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/).
+3. Save the keys for integration setup.
 
 ### Installation
 
@@ -256,7 +256,7 @@ This integration brings cloud-based object and text recognition to Home Assistan
 ### Configuration
 
 1. Go to **Settings → Devices & Services → Add Integration** or use the [configuration button](https://my.home-assistant.io/redirect/config_flow_start/?domain=vkcloud_vision).
-2. Enter the **Service Token** obtained from VK Cloud.
+2. Enter the **Client ID** and **Client Secret** obtained from VK Cloud.
 3. Save the configuration and restart Home Assistant if prompted.
 
 ## Donations
