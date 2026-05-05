@@ -91,7 +91,7 @@
         },
         "max_retries": {
           "name": "Maximum Retries",
-          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 5."
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 3."
         }
       }
     },
@@ -102,6 +102,10 @@
         "lang": {
           "name": "Language",
           "description": "Specify the language for better recognition accuracy. Defaults to auto-detect if not specified."
+        },
+        "max_retries": {
+          "name": "Maximum Retries",
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 3."
         }
       }
     },
@@ -120,6 +124,22 @@
         "update_embedding": {
           "name": "Update Embedding",
           "description": "Update the stored face reference for better future recognition. Disable for low-quality images."
+        },
+        "confidence_threshold": {
+          "name": "Confidence Threshold",
+          "description": "Minimum confidence score for the face detector to consider a detection as a face. Defaults to 0.1 (10%)."
+        },
+        "max_retries": {
+          "name": "Maximum Retries",
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 3."
+        },
+        "file_out": {
+          "name": "Output File Path",
+          "description": "Path to save processed face snapshot with bounding boxes."
+        },
+        "bounding_boxes": {
+          "name": "Bounding Boxes Style",
+          "description": "Configure how recognized faces are visualized. Defaults to \"tag\" (tag + similarity%)."
         }
       }
     }
@@ -148,6 +168,13 @@
       "options": {
         "rus": "Russian",
         "eng": "English"
+      }
+    },
+    "face_bounding_boxes": {
+      "options": {
+        "none": "No bounding boxes",
+        "no_labels": "No labels",
+        "tag": "Tag"
       }
     }
   },
