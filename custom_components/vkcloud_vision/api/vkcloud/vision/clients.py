@@ -70,14 +70,17 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
         self,
         files: List[bytes],
         space: int,
-        images: List[Dict[str, Any]],
+        person_id: int,
     ) -> Dict[str, Any]:
         """Delete a relationship between a photo and person_id."""
         meta = {
             "space": str(space),
-            "images": images,  # Expected format: [{"name": str, "person_id": int}]
+            "images": [{
+                "name": "none",
+                "person_id": person_id,
+            }],
         }
-        return await self._make_request("/v1/persons/delete", meta, files, max_retries=1)
+        return await self._make_request("/v1/persons/delete", meta, max_retries=1)
 
     async def truncate(self, space: int) -> Dict[str, Any]:
         """Clear the entire space."""
