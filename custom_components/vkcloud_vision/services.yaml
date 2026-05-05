@@ -110,6 +110,21 @@ recognize_faces:
           min: 1
           max: 10
           mode: box
+    file_out:
+      required: false
+      example: "/config/www/vision_face_snapshot.jpg"
+      selector:
+        template:
+    bounding_boxes:
+      default: tag
+      required: false
+      selector:
+        select:
+          options:
+            - none
+            - no_labels
+            - tag
+          translation_key: face_bounding_boxes
 
 recognize_text:
   target:

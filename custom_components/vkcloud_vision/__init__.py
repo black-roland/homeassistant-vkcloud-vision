@@ -25,10 +25,11 @@ from .const import (ATTR_BOUNDING_BOXES, ATTR_CONFIDENCE_THRESHOLD,
                     ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
                     ATTR_SPACE, ATTR_UPDATE_EMBEDDING, CONF_API_KEY,
                     CONF_CLIENT_ID, CONF_REFRESH_TOKEN, CONF_TRAINING_MODE,
-                    DEFAULT_BOUNDING_BOXES, DEFAULT_CONFIDENCE_THRESHOLD,
+                    DEFAULT_CONFIDENCE_THRESHOLD, DEFAULT_FACE_BOUNDING_BOXES,
                     DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
-                    DEFAULT_PROB_THRESHOLD, DEFAULT_SNAPSHOT_INTERVAL_SEC,
-                    DEFAULT_SPACE, DEFAULT_TRAINING_MODE, DOMAIN, LOGGER,
+                    DEFAULT_OBJECT_BOUNDING_BOXES, DEFAULT_PROB_THRESHOLD,
+                    DEFAULT_SNAPSHOT_INTERVAL_SEC, DEFAULT_SPACE,
+                    DEFAULT_TRAINING_MODE, DOMAIN, LOGGER,
                     SERVICE_DETECT_OBJECTS, SERVICE_RECOGNIZE_FACES,
                     SERVICE_RECOGNIZE_TEXT, VALID_MODES, BoundingBoxesType,
                     ResponseType)
@@ -122,6 +123,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     create_new,
                     update_embedding,
                     call.data.get(ATTR_CONFIDENCE_THRESHOLD, DEFAULT_CONFIDENCE_THRESHOLD),
+                    call.data.get(ATTR_FILE_OUT),
+                    call.data.get(ATTR_BOUNDING_BOXES, DEFAULT_FACE_BOUNDING_BOXES),
                     call.data.get(ATTR_MAX_RETRIES, DEFAULT_MAX_RETRIES),
                 )
             except HomeAssistantError as err:
@@ -147,7 +150,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ): vol.All(vol.Coerce(float), vol.Range(min=0.01, max=1.0)),
             vol.Optional(ATTR_FILE_OUT): cv.string,
             vol.Optional(
-                ATTR_BOUNDING_BOXES, default=DEFAULT_BOUNDING_BOXES
+                ATTR_BOUNDING_BOXES, default=DEFAULT_OBJECT_BOUNDING_BOXES
             ): vol.In([bb.value for bb in BoundingBoxesType]),
             vol.Optional(
                 ATTR_NUM_SNAPSHOTS, default=DEFAULT_NUM_SNAPSHOTS
@@ -186,6 +189,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(
                 ATTR_CONFIDENCE_THRESHOLD, default=DEFAULT_CONFIDENCE_THRESHOLD
             ): vol.All(vol.Coerce(float), vol.Range(min=0.01, max=1.0)),
+            vol.Optional(ATTR_FILE_OUT): cv.string,
+            vol.Optional(ATTR_BOUNDING_BOXES, default=DEFAULT_FACE_BOUNDING_BOXES): vol.In([
+                BoundingBoxesType.NONE.value,
+                BoundingBoxesType.NO_LABELS.value,
+                BoundingBoxesType.TAG.value,
+            ]),
             vol.Optional(
                 ATTR_MAX_RETRIES, default=DEFAULT_MAX_RETRIES
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
