@@ -220,6 +220,12 @@ data:
 
 Данная интеграция не является официальным продуктом VK Cloud и не поддерживается VK.
 
+## Лицензия
+
+Код интеграции распространяется на условиях [Mozilla Public License Version 2.0](https://mozilla.org/MPL/2.0/).
+
+Включает шрифт **Tuffy Bold** Тэтчера Ульриха. Сам шрифт находится в [общественном достоянии](https://tulrich.com/fonts/).
+
 ---
 
 # VK Cloud Vision for Home Assistant
@@ -272,5 +278,11 @@ If this integration has been useful to you, consider [buying the author a coffee
 This is a community project, not affiliated with VK Cloud. VK Cloud Vision is a service provided by VK Cloud.
 
 This integration is not an official VK Cloud product and is not supported by VK.
+
+## License
+
+This integration is released under the [Mozilla Public License Version 2.0](https://mozilla.org/MPL/2.0/).
+
+Includes the **Tuffy Bold** font by Thatcher Ulrich, which is in the [public domain](https://tulrich.com/fonts/).
 
 [donors-list]: https://github.com/user-attachments/assets/42db246f-ac83-46f8-8cae-1bb526ad0a4e
