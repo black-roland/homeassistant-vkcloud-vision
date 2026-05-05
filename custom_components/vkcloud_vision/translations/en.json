@@ -32,8 +32,9 @@
         "title": "VK Cloud Vision Settings",
         "description": "Manage face recognition and data cleanup.",
         "menu_options": {
-          "face_recognition": "Face recognition",
-          "truncate_space": "Clear face data"
+          "face_recognition": "Face recognition settings",
+          "truncate_space": "Clear face data",
+          "delete_persons": "Delete specific persons"
         }
       },
       "face_recognition": {
@@ -50,14 +51,27 @@
           "truncate_space": "Space",
           "confirm_truncate": "I understand, delete all faces"
         }
+      },
+      "delete_persons": {
+        "title": "Delete Persons",
+        "description": "Delete specific persons from a space. This action cannot be undone.",
+        "data": {
+          "delete_person_space": "Space",
+          "person_ids": "Person IDs (comma-separated)",
+          "confirm_delete": "I understand, delete these persons"
+        }
       }
     },
     "error": {
       "confirm_truncate": "Please confirm the deletion",
-      "truncate_failed": "Failed to clear space. Check Home Assistant logs and try again."
+      "truncate_failed": "Failed to clear space. Check Home Assistant logs and try again.",
+      "confirm_delete": "Please confirm the deletion",
+      "invalid_person_ids": "Invalid person IDs (must be comma-separated integers)",
+      "delete_failed": "Failed to delete persons. Check Home Assistant logs and try again."
     },
     "abort": {
-      "truncate_success": "Space cleared successfully"
+      "truncate_success": "Space cleared successfully",
+      "delete_success": "Persons deleted successfully"
     }
   },
   "services": {
@@ -91,7 +105,7 @@
         },
         "max_retries": {
           "name": "Maximum Retries",
-          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 5."
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 3."
         }
       }
     },
@@ -102,6 +116,10 @@
         "lang": {
           "name": "Language",
           "description": "Specify the language for better recognition accuracy. Defaults to auto-detect if not specified."
+        },
+        "max_retries": {
+          "name": "Maximum Retries",
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 3."
         }
       }
     },
@@ -120,6 +138,22 @@
         "update_embedding": {
           "name": "Update Embedding",
           "description": "Update the stored face reference for better future recognition. Disable for low-quality images."
+        },
+        "confidence_threshold": {
+          "name": "Confidence Threshold",
+          "description": "Minimum confidence score for the face detector to consider a detection as a face. Defaults to 0.1 (10%)."
+        },
+        "max_retries": {
+          "name": "Maximum Retries",
+          "description": "Number of retry attempts for API requests in case of timeouts or temporary errors. Defaults to 3."
+        },
+        "file_out": {
+          "name": "Output File Path",
+          "description": "Path to save processed face snapshot with bounding boxes."
+        },
+        "bounding_boxes": {
+          "name": "Bounding Boxes Style",
+          "description": "Configure how recognized faces are visualized. Defaults to \"tag\" (tag + similarity%)."
         }
       }
     }
@@ -148,6 +182,13 @@
       "options": {
         "rus": "Russian",
         "eng": "English"
+      }
+    },
+    "face_bounding_boxes": {
+      "options": {
+        "none": "No bounding boxes",
+        "no_labels": "No labels",
+        "tag": "Tag"
       }
     }
   },

@@ -10,12 +10,13 @@ from homeassistant.config_entries import (ConfigEntry, ConfigFlow,
                                           ConfigFlowResult, OptionsFlow)
 from homeassistant.helpers.selector import (NumberSelector,
                                             NumberSelectorConfig,
-                                            NumberSelectorMode)
+                                            NumberSelectorMode, TextSelector)
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_CONFIRM_TRUNCATE,
-                    CONF_REFRESH_TOKEN, CONF_TRAINING_MODE,
+from .const import (CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_CONFIRM_DELETE,
+                    CONF_CONFIRM_TRUNCATE, CONF_DELETE_PERSON_SPACE,
+                    CONF_PERSON_IDS, CONF_REFRESH_TOKEN, CONF_TRAINING_MODE,
                     CONF_TRUNCATE_SPACE, DEFAULT_SPACE, DEFAULT_TRAINING_MODE,
                     DOMAIN, LOGGER)
 
@@ -138,7 +139,7 @@ class VKCloudVisionOptionsFlow(OptionsFlow):
         """Show the main menu."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["face_recognition", "truncate_space"],
+            menu_options=["face_recognition", "truncate_space", "delete_persons"],
         )
 
     async def async_step_face_recognition(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -179,8 +180,10 @@ class VKCloudVisionOptionsFlow(OptionsFlow):
                 else:
                     return self.async_abort(reason="truncate_success")
 
+        space_default = user_input.get(CONF_TRUNCATE_SPACE, DEFAULT_SPACE) if user_input else DEFAULT_SPACE
+
         data_schema = vol.Schema({
-            vol.Required(CONF_TRUNCATE_SPACE, default=DEFAULT_SPACE): vol.All(
+            vol.Required(CONF_TRUNCATE_SPACE, default=space_default): vol.All(
                 NumberSelector(
                     NumberSelectorConfig(min=0, max=9, mode=NumberSelectorMode.BOX),
                 ),
@@ -191,6 +194,54 @@ class VKCloudVisionOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="truncate_space",
+            data_schema=data_schema,
+            errors=errors,
+        )
+
+    async def async_step_delete_persons(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Delete specific persons from a space."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            space = user_input.get(CONF_DELETE_PERSON_SPACE, DEFAULT_SPACE)
+            person_ids_str = user_input.get(CONF_PERSON_IDS, "")
+            confirm = user_input.get(CONF_CONFIRM_DELETE, False)
+
+            if not confirm:
+                errors["base"] = "confirm_delete"
+            else:
+                person_ids = []
+                if person_ids_str:
+                    try:
+                        person_ids = [int(id.strip()) for id in person_ids_str.split(",") if id.strip()]
+                    except ValueError:
+                        errors["base"] = "invalid_person_ids"
+                if not errors:
+                    client: VKCloudVision = self.config_entry.runtime_data
+                    try:
+                        await client.persons.delete(space, person_ids)
+                    except Exception as err:
+                        errors["base"] = "delete_failed"
+                        LOGGER.error("Delete persons from space %s failed: %s", space, err)
+                    else:
+                        return self.async_abort(reason="delete_success")
+
+        space_default = user_input.get(CONF_DELETE_PERSON_SPACE, DEFAULT_SPACE) if user_input else DEFAULT_SPACE
+        person_ids_default = user_input.get(CONF_PERSON_IDS, "") if user_input else ""
+
+        data_schema = vol.Schema({
+            vol.Required(CONF_DELETE_PERSON_SPACE, default=space_default): vol.All(
+                NumberSelector(
+                    NumberSelectorConfig(min=0, max=9, mode=NumberSelectorMode.BOX),
+                ),
+                vol.Coerce(int),
+            ),
+            vol.Required(CONF_PERSON_IDS, default=person_ids_default): TextSelector(),
+            vol.Required(CONF_CONFIRM_DELETE, default=False): bool,
+        })
+
+        return self.async_show_form(
+            step_id="delete_persons",
             data_schema=data_schema,
             errors=errors,
         )

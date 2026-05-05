@@ -19,14 +19,17 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (ATTR_BOUNDING_BOXES, ATTR_FILE_OUT, ATTR_LANG,
+from .const import (ATTR_BOUNDING_BOXES, ATTR_CONFIDENCE_THRESHOLD,
+                    ATTR_CREATE_NEW, ATTR_FILE_OUT, ATTR_LANG,
                     ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
                     ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
-                    CONF_API_KEY, CONF_CLIENT_ID, CONF_REFRESH_TOKEN,
-                    CONF_TRAINING_MODE, DEFAULT_BOUNDING_BOXES,
+                    ATTR_SPACE, ATTR_UPDATE_EMBEDDING, CONF_API_KEY,
+                    CONF_CLIENT_ID, CONF_REFRESH_TOKEN, CONF_TRAINING_MODE,
+                    DEFAULT_CONFIDENCE_THRESHOLD, DEFAULT_FACE_BOUNDING_BOXES,
                     DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
-                    DEFAULT_PROB_THRESHOLD, DEFAULT_SNAPSHOT_INTERVAL_SEC,
-                    DEFAULT_SPACE, DEFAULT_TRAINING_MODE, DOMAIN, LOGGER,
+                    DEFAULT_OBJECT_BOUNDING_BOXES, DEFAULT_PROB_THRESHOLD,
+                    DEFAULT_SNAPSHOT_INTERVAL_SEC, DEFAULT_SPACE,
+                    DEFAULT_TRAINING_MODE, DOMAIN, LOGGER,
                     SERVICE_DETECT_OBJECTS, SERVICE_RECOGNIZE_FACES,
                     SERVICE_RECOGNIZE_TEXT, VALID_MODES, BoundingBoxesType,
                     ResponseType)
@@ -82,13 +85,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def recognize_text(call: ServiceCall) -> EntityServiceResponse:
         """Recognize text in images from multiple cameras."""
         vision_entity = get_vision_entity(hass)
-        lang = call.data.get(ATTR_LANG)
 
         # FIXME: Workaround to process multiple entities in a way `entity_service_call` does
         result = {}
         for camera_id in call.data.get("entity_id", []):
             try:
-                result[camera_id] = await vision_entity.recognize_text(camera_id, lang)
+                result[camera_id] = await vision_entity.recognize_text(
+                    camera_id,
+                    call.data.get(ATTR_LANG),
+                    call.data.get(ATTR_MAX_RETRIES, DEFAULT_MAX_RETRIES)
+                )
             except HomeAssistantError as err:
                 result[camera_id] = {
                     "response": None,
@@ -103,8 +109,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vision_entry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
 
         training_mode = vision_entry.options.get(CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE)
-        create_new = call.data.get("create_new", training_mode)
-        update_embedding = call.data.get("update_embedding", training_mode)
+        create_new = call.data.get(ATTR_CREATE_NEW, training_mode)
+        update_embedding = call.data.get(ATTR_UPDATE_EMBEDDING, training_mode)
         LOGGER.debug("Trainig mode: %s, create new: %s, update embedding: %s",
                      training_mode, create_new, update_embedding)
 
@@ -113,9 +119,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             try:
                 result[camera_id] = await vision_entity.recognize_faces(
                     camera_id,
-                    call.data.get("space", DEFAULT_SPACE),
+                    call.data.get(ATTR_SPACE, DEFAULT_SPACE),
                     create_new,
                     update_embedding,
+                    call.data.get(ATTR_CONFIDENCE_THRESHOLD, DEFAULT_CONFIDENCE_THRESHOLD),
+                    call.data.get(ATTR_FILE_OUT),
+                    call.data.get(ATTR_BOUNDING_BOXES, DEFAULT_FACE_BOUNDING_BOXES),
+                    call.data.get(ATTR_MAX_RETRIES, DEFAULT_MAX_RETRIES),
                 )
             except HomeAssistantError as err:
                 result[camera_id] = {
@@ -140,7 +150,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ): vol.All(vol.Coerce(float), vol.Range(min=0.01, max=1.0)),
             vol.Optional(ATTR_FILE_OUT): cv.string,
             vol.Optional(
-                ATTR_BOUNDING_BOXES, default=DEFAULT_BOUNDING_BOXES
+                ATTR_BOUNDING_BOXES, default=DEFAULT_OBJECT_BOUNDING_BOXES
             ): vol.In([bb.value for bb in BoundingBoxesType]),
             vol.Optional(
                 ATTR_NUM_SNAPSHOTS, default=DEFAULT_NUM_SNAPSHOTS
@@ -161,6 +171,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         recognize_text,
         schema=cv.make_entity_service_schema({
             vol.Optional(ATTR_LANG): vol.In(["rus", "eng"]),
+            vol.Optional(
+                ATTR_MAX_RETRIES, default=DEFAULT_MAX_RETRIES
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
         }),
         supports_response=SupportsResponse.ONLY,
     )
@@ -170,9 +183,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECOGNIZE_FACES,
         recognize_faces,
         schema=cv.make_entity_service_schema({
-            vol.Required("space", default=DEFAULT_SPACE): vol.All(vol.Coerce(int), vol.Range(min=0, max=9)),
-            vol.Optional("create_new"): cv.boolean,
-            vol.Optional("update_embedding"): cv.boolean,
+            vol.Required(ATTR_SPACE, default=DEFAULT_SPACE): vol.All(vol.Coerce(int), vol.Range(min=0, max=9)),
+            vol.Optional(ATTR_CREATE_NEW): cv.boolean,
+            vol.Optional(ATTR_UPDATE_EMBEDDING): cv.boolean,
+            vol.Optional(
+                ATTR_CONFIDENCE_THRESHOLD, default=DEFAULT_CONFIDENCE_THRESHOLD
+            ): vol.All(vol.Coerce(float), vol.Range(min=0.01, max=1.0)),
+            vol.Optional(ATTR_FILE_OUT): cv.string,
+            vol.Optional(ATTR_BOUNDING_BOXES, default=DEFAULT_FACE_BOUNDING_BOXES): vol.In([
+                BoundingBoxesType.NONE.value,
+                BoundingBoxesType.NO_LABELS.value,
+                BoundingBoxesType.TAG.value,
+            ]),
+            vol.Optional(
+                ATTR_MAX_RETRIES, default=DEFAULT_MAX_RETRIES
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
         }),
         supports_response=SupportsResponse.ONLY,
     )
