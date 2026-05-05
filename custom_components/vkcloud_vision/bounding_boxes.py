@@ -51,12 +51,18 @@ class BoundingBoxes:
                     continue
 
                 text = None
+                score = 0.0
                 if self.mode == BoundingBoxesType.RUS:
                     text = label.get("rus")
+                    score = label.get("prob", 0.0)
                 elif self.mode == BoundingBoxesType.ENG:
                     text = label.get("eng")
+                    score = label.get("prob", 0.0)
+                elif self.mode == BoundingBoxesType.TAG:
+                    text = label.get("tag")
+                    score = label.get("similarity", 0.0)
 
-                self._draw_box(draw, tuple(coord), text, label.get("prob", 0))
+                self._draw_box(draw, tuple(coord), text, score)
 
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         image.save(output_path)

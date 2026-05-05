@@ -162,8 +162,16 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         }
 
     async def recognize_faces(
-            self, camera_id: str, space: int, create_new: bool,
-            update_embedding: bool, confidence_threshold: float, max_retries: int) -> JsonObjectType:
+        self,
+        camera_id: str,
+        space: int,
+        create_new: bool,
+        update_embedding: bool,
+        confidence_threshold: float,
+        file_out: str | None,
+        bounding_boxes: str,
+        max_retries: int
+    ) -> JsonObjectType:
         """Recognize faces in an image."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
         client: VKCloudVision = entry.runtime_data
@@ -171,6 +179,8 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         image_data = await self._async_get_image(camera_id)
         image_meta = {"name": split_entity_id(camera_id)[1]}
 
+        response = None
+        api_error = None
         try:
             response = await client.persons.recognize(
                 files=[image_data],
@@ -182,10 +192,31 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 max_retries=max_retries,
             )
         except Exception as err:
-            raise HomeAssistantError(f"Face recognition error: {err}") from err
+            LOGGER.exception("Face recognition error", exc_info=err)
+            api_error = str(err)
+
+        output_path = None
+        if file_out:
+            if response is not None:
+                boxes = BoundingBoxes(image_data, response.persons, BoundingBoxesType(bounding_boxes))
+            else:
+                LOGGER.warning("API call failed. Saving raw snapshot without bounding boxes.")
+                boxes = BoundingBoxes(image_data, [], BoundingBoxesType.NONE)
+            try:
+                output_path = await self.hass.async_add_executor_job(boxes.save_image, file_out)
+            except Exception as err:
+                LOGGER.error("Image saving failed: %s", err)
+                raise HomeAssistantError(f"Image saving failed: {err}") from err
+
+        if response is None:
+            raise HomeAssistantError(f"Face recognition error: {api_error}")
+
+        self._last_detection = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
 
         return {
             "response": response.data,
+            "file_out": output_path,
             "response_type": ResponseType.PARTIAL_ACTION_DONE if response.has_errors else ResponseType.ACTION_DONE,
             "error": response.error_message,
         }

@@ -45,7 +45,8 @@ VALID_MODES = [
 DEFAULT_MODES = ["multiobject"]
 DEFAULT_PROB_THRESHOLD = 0.1
 DEFAULT_CONFIDENCE_THRESHOLD = 0.1
-DEFAULT_BOUNDING_BOXES = "rus"
+DEFAULT_OBJECT_BOUNDING_BOXES = "rus"
+DEFAULT_FACE_BOUNDING_BOXES = "tag"
 DEFAULT_NUM_SNAPSHOTS = 1
 DEFAULT_SNAPSHOT_INTERVAL_SEC = .5
 DEFAULT_MAX_RETRIES = 3
@@ -68,6 +69,7 @@ class BoundingBoxesType(StrEnum):
     NO_LABELS = "no_labels"
     RUS = "rus"
     ENG = "eng"
+    TAG = "tag"
 
 
 class ResponseType(StrEnum):
