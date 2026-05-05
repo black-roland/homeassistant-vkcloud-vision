@@ -32,8 +32,9 @@
         "title": "Настройки VK Cloud Vision",
         "description": "Управление распознаванием лиц и очисткой данных.",
         "menu_options": {
-          "face_recognition": "Распознавание лиц",
-          "truncate_space": "Очистка базы лиц"
+          "face_recognition": "Настройки распознавания лиц",
+          "truncate_space": "Очистка базы лиц",
+          "delete_persons": "Удаление конкретных лиц"
         }
       },
       "face_recognition": {
@@ -50,14 +51,27 @@
           "truncate_space": "Пространство",
           "confirm_truncate": "Я понимаю, удалить все лица"
         }
+      },
+      "delete_persons": {
+        "title": "Удаление лиц",
+        "description": "Удалить конкретные лица из указанного пространства. Это действие нельзя отменить.",
+        "data": {
+          "delete_person_space": "Пространство",
+          "person_ids": "ID лиц (через запятую)",
+          "confirm_delete": "Я понимаю, удалить эти лица"
+        }
       }
     },
     "error": {
       "confirm_truncate": "Пожалуйста, подтвердите удаление",
-      "truncate_failed": "Не удалось очистить пространство. Проверьте логи Home Assistant и попробуйте снова."
+      "truncate_failed": "Не удалось очистить пространство. Проверьте логи Home Assistant и попробуйте снова.",
+      "confirm_delete": "Пожалуйста, подтвердите удаление",
+      "invalid_person_ids": "Неверные ID лиц (должны быть целыми числами через запятую)",
+      "delete_failed": "Не удалось удалить лица. Проверьте логи Home Assistant и попробуйте снова."
     },
     "abort": {
-      "truncate_success": "Пространство успешно очищено"
+      "truncate_success": "Пространство успешно очищено",
+      "delete_success": "Лица успешно удалены"
     }
   },
   "services": {

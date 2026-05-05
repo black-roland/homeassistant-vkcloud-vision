@@ -32,8 +32,9 @@
         "title": "VK Cloud Vision Settings",
         "description": "Manage face recognition and data cleanup.",
         "menu_options": {
-          "face_recognition": "Face recognition",
-          "truncate_space": "Clear face data"
+          "face_recognition": "Face recognition settings",
+          "truncate_space": "Clear face data",
+          "delete_persons": "Delete specific persons"
         }
       },
       "face_recognition": {
@@ -50,14 +51,27 @@
           "truncate_space": "Space",
           "confirm_truncate": "I understand, delete all faces"
         }
+      },
+      "delete_persons": {
+        "title": "Delete Persons",
+        "description": "Delete specific persons from a space. This action cannot be undone.",
+        "data": {
+          "delete_person_space": "Space",
+          "person_ids": "Person IDs (comma-separated)",
+          "confirm_delete": "I understand, delete these persons"
+        }
       }
     },
     "error": {
       "confirm_truncate": "Please confirm the deletion",
-      "truncate_failed": "Failed to clear space. Check Home Assistant logs and try again."
+      "truncate_failed": "Failed to clear space. Check Home Assistant logs and try again.",
+      "confirm_delete": "Please confirm the deletion",
+      "invalid_person_ids": "Invalid person IDs (must be comma-separated integers)",
+      "delete_failed": "Failed to delete persons. Check Home Assistant logs and try again."
     },
     "abort": {
-      "truncate_success": "Space cleared successfully"
+      "truncate_success": "Space cleared successfully",
+      "delete_success": "Persons deleted successfully"
     }
   },
   "services": {

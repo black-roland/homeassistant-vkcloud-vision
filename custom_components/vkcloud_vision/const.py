@@ -57,6 +57,9 @@ DEFAULT_TRAINING_MODE = False
 CONF_TRAINING_MODE = "training_mode"
 CONF_TRUNCATE_SPACE = "truncate_space"
 CONF_CONFIRM_TRUNCATE = "confirm_truncate"
+CONF_DELETE_PERSON_SPACE = "delete_person_space"
+CONF_PERSON_IDS = "person_ids"
+CONF_CONFIRM_DELETE = "confirm_delete"
 
 SERVICE_DETECT_OBJECTS = "detect_objects"
 SERVICE_RECOGNIZE_TEXT = "recognize_text"
