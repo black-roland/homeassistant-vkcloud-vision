@@ -46,7 +46,7 @@ DEFAULT_MODES = ["multiobject"]
 DEFAULT_PROB_THRESHOLD = 0.1
 DEFAULT_CONFIDENCE_THRESHOLD = 0.1
 DEFAULT_OBJECT_BOUNDING_BOXES = "rus"
-DEFAULT_FACE_BOUNDING_BOXES = "tag"
+DEFAULT_FACE_BOUNDING_BOXES = "alias"
 DEFAULT_NUM_SNAPSHOTS = 1
 DEFAULT_SNAPSHOT_INTERVAL_SEC = .5
 DEFAULT_MAX_RETRIES = 3
@@ -60,8 +60,10 @@ CONF_TRUNCATE_SPACE = "truncate_space"
 CONF_CONFIRM_TRUNCATE = "confirm_truncate"
 CONF_DELETE_PERSON_SPACE = "delete_person_space"
 CONF_PERSON_IDS = "person_ids"
+CONF_PERSON_ALIASES = "person_aliases"
 CONF_CONFIRM_DELETE = "confirm_delete"
-SECTION_TRAINING_MODE = "training_mode"
+SECTION_TRAINING_MODE = "section_training_mode"
+SECTION_PERSON_ALIASES = "section_person_aliases"
 
 SERVICE_DETECT_OBJECTS = "detect_objects"
 SERVICE_RECOGNIZE_TEXT = "recognize_text"
@@ -75,6 +77,7 @@ class BoundingBoxesType(StrEnum):
     RUS = "rus"
     ENG = "eng"
     TAG = "tag"
+    ALIAS = "alias"
 
 
 class ResponseType(StrEnum):

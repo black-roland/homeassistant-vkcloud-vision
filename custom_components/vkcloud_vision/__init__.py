@@ -24,7 +24,8 @@ from .const import (ATTR_BOUNDING_BOXES, ATTR_CONFIDENCE_THRESHOLD,
                     ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
                     ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
                     ATTR_SPACE, ATTR_UPDATE_EMBEDDING, CONF_API_KEY,
-                    CONF_CLIENT_ID, CONF_CREATE_NEW, CONF_REFRESH_TOKEN,
+                    CONF_CLIENT_ID, CONF_CREATE_NEW, CONF_PERSON_ALIASES,
+                    CONF_REFRESH_TOKEN,
                     CONF_UPDATE_EMBEDDING, DEFAULT_CONFIDENCE_THRESHOLD,
                     DEFAULT_CREATE_NEW, DEFAULT_FACE_BOUNDING_BOXES,
                     DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
@@ -109,24 +110,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vision_entity = get_vision_entity(hass)
         vision_entry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
 
+        # Training mode
         create_new_default = vision_entry.options.get(CONF_CREATE_NEW, DEFAULT_CREATE_NEW)
         update_embedding_default = vision_entry.options.get(CONF_UPDATE_EMBEDDING, DEFAULT_UPDATE_EMBEDDING)
         create_new = call.data.get(ATTR_CREATE_NEW, create_new_default)
         update_embedding = call.data.get(ATTR_UPDATE_EMBEDDING, update_embedding_default)
         LOGGER.debug("Create new: %s, update embedding: %s", create_new, update_embedding)
 
+        # Get and filter person aliases by current space
+        space = call.data.get(ATTR_SPACE, DEFAULT_SPACE)
+        alias_entries = vision_entry.options.get(CONF_PERSON_ALIASES, [])
+        tag_to_alias_map = {
+            f"person{alias_entry['person_id']}": alias_entry["alias"]
+            for alias_entry in alias_entries
+            if alias_entry["space"] == space
+        }
+
         result = {}
         for camera_id in call.data.get("entity_id", []):
             try:
                 result[camera_id] = await vision_entity.recognize_faces(
                     camera_id,
-                    call.data.get(ATTR_SPACE, DEFAULT_SPACE),
+                    space,
                     create_new,
                     update_embedding,
                     call.data.get(ATTR_CONFIDENCE_THRESHOLD, DEFAULT_CONFIDENCE_THRESHOLD),
                     call.data.get(ATTR_FILE_OUT),
                     call.data.get(ATTR_BOUNDING_BOXES, DEFAULT_FACE_BOUNDING_BOXES),
                     call.data.get(ATTR_MAX_RETRIES, DEFAULT_MAX_RETRIES),
+                    tag_to_alias_map,
                 )
             except HomeAssistantError as err:
                 result[camera_id] = {
@@ -195,6 +207,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 BoundingBoxesType.NONE.value,
                 BoundingBoxesType.NO_LABELS.value,
                 BoundingBoxesType.TAG.value,
+                BoundingBoxesType.ALIAS.value,
             ]),
             vol.Optional(
                 ATTR_MAX_RETRIES, default=DEFAULT_MAX_RETRIES

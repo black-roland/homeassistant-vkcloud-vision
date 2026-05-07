@@ -40,12 +40,19 @@
       "face_recognition": {
         "title": "Face Recognition",
         "sections": {
-          "training_mode": {
+          "section_training_mode": {
             "name": "Training mode",
             "description": "Configure training mode options to automatically enroll unrecognized faces as new persons and update stored face references for better future recognition.\n\nThese settings act as defaults and can be overridden in `vkcloud_vision.recognize_faces` service call.",
             "data": {
               "create_new": "Create new faces",
               "update_embedding": "Update face embeddings"
+            }
+          },
+          "section_person_aliases": {
+            "name": "Person aliases",
+            "description": "Map person IDs to aliases for specific spaces. Each entry includes person ID, space (0–9), and alias name.",
+            "data": {
+              "person_aliases": "Aliases"
             }
           }
         }
@@ -194,7 +201,15 @@
       "options": {
         "none": "No bounding boxes",
         "no_labels": "No labels",
-        "tag": "Tag"
+        "tag": "Tag",
+        "alias": "Alias (person name)"
+      }
+    },
+    "person_aliases": {
+      "fields": {
+        "space": "Space",
+        "person_id": "Person ID",
+        "alias": "Alias"
       }
     }
   },

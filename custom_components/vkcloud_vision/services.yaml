@@ -116,7 +116,7 @@ recognize_faces:
       selector:
         template:
     bounding_boxes:
-      default: tag
+      default: alias
       required: false
       selector:
         select:
@@ -124,6 +124,7 @@ recognize_faces:
             - none
             - no_labels
             - tag
+            - alias
           translation_key: face_bounding_boxes
 
 recognize_text:

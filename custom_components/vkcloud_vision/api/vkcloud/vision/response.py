@@ -73,11 +73,12 @@ class VKCloudVisionObjectDetectionResponse:
 class VKCloudVisionFaceRecognitionResponse:
     """Parse response from /v1/persons/recognize."""
 
-    def __init__(self, raw_response: dict, confidence_threshold: float = 0.1):
+    def __init__(self, raw_response: dict, confidence_threshold: float = 0.1, tag_to_alias_map: dict | None = None):
         self._persons: list[dict] = []
         self._aliases_changed: bool = False
         self._errors: list[str] = []
         self._confidence_threshold = confidence_threshold
+        self._tag_to_alias_map = tag_to_alias_map or {}
         self._parse_persons(raw_response)
 
     @property
@@ -117,10 +118,14 @@ class VKCloudVisionFaceRecognitionResponse:
         if status != 0:
             self._errors.append(f"{obj.get('name', 'unknown')}: {obj.get('error', 'unknown')}")
 
-        self._persons = [
-            person for person in obj.get("persons", [])
-            if person.get("confidence", 0) >= self._confidence_threshold
-        ]
+        self._persons = []
+        for person in obj.get("persons", []):
+            if person.get("confidence", 0) < self._confidence_threshold:
+                continue
+
+            tag = person.get("tag", "undefined")
+            person["alias"] = self._tag_to_alias_map.get(tag, tag)
+            self._persons.append(person)
 
 
 class VKCloudVisionTextRecognitionResponse:

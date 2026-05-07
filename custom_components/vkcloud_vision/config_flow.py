@@ -11,17 +11,18 @@ from homeassistant.config_entries import (ConfigEntry, ConfigFlow,
                                           ConfigFlowResult, OptionsFlow)
 from homeassistant.helpers.selector import (NumberSelector,
                                             NumberSelectorConfig,
-                                            NumberSelectorMode, TextSelector)
+                                            NumberSelectorMode, ObjectSelector,
+                                            ObjectSelectorConfig, TextSelector)
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
 from .const import (CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_CONFIRM_DELETE,
                     CONF_CONFIRM_TRUNCATE, CONF_CREATE_NEW,
-                    CONF_DELETE_PERSON_SPACE, CONF_PERSON_IDS,
-                    CONF_REFRESH_TOKEN, CONF_TRUNCATE_SPACE,
+                    CONF_DELETE_PERSON_SPACE, CONF_PERSON_ALIASES,
+                    CONF_PERSON_IDS, CONF_REFRESH_TOKEN, CONF_TRUNCATE_SPACE,
                     CONF_UPDATE_EMBEDDING, DEFAULT_CREATE_NEW, DEFAULT_SPACE,
                     DEFAULT_UPDATE_EMBEDDING, DOMAIN, LOGGER,
-                    SECTION_TRAINING_MODE)
+                    SECTION_PERSON_ALIASES, SECTION_TRAINING_MODE)
 
 
 class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -146,24 +147,53 @@ class VKCloudVisionOptionsFlow(OptionsFlow):
         )
 
     async def async_step_face_recognition(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Manage face recognition options (training mode)."""
+        """Manage face recognition options (training mode and aliases)."""
         if user_input is not None:
             new_opts = dict(self.config_entry.options)
             new_opts.update(user_input.get(SECTION_TRAINING_MODE, {}))
+            new_opts.update(user_input.get(SECTION_PERSON_ALIASES, {}))
             return self.async_create_entry(data=new_opts)
 
         create_new_default = self.config_entry.options.get(CONF_CREATE_NEW, DEFAULT_CREATE_NEW)
         update_embedding_default = self.config_entry.options.get(CONF_UPDATE_EMBEDDING, DEFAULT_UPDATE_EMBEDDING)
+        existing_aliases = self.config_entry.options.get(CONF_PERSON_ALIASES, [])
 
         training_schema = vol.Schema({
             vol.Required(CONF_CREATE_NEW, default=create_new_default): bool,
             vol.Required(CONF_UPDATE_EMBEDDING, default=update_embedding_default): bool,
         })
 
+        alias_schema = vol.Schema({
+            vol.Optional(CONF_PERSON_ALIASES, default=existing_aliases): ObjectSelector(
+                ObjectSelectorConfig(
+                    fields={
+                        "alias": {
+                            "required": True,
+                            "selector": {"text": None},
+                        },
+                        "person_id": {
+                            "required": True,
+                            "selector": {"number": {"min": 1, "mode": "box"}},
+                        },
+                        "space": {
+                            "required": True,
+                            "selector": {"number": {"min": 0, "max": 9, "mode": "box"}},
+                        },
+                    },
+                    multiple=True,
+                    translation_key="person_aliases",
+                )
+            )
+        })
+
         schema = self.add_suggested_values_to_schema(
             vol.Schema({
                 vol.Required(SECTION_TRAINING_MODE): data_entry_flow.section(
                     training_schema,
+                    {"collapsed": False},
+                ),
+                vol.Required(SECTION_PERSON_ALIASES): data_entry_flow.section(
+                    alias_schema,
                     {"collapsed": False},
                 ),
             }),

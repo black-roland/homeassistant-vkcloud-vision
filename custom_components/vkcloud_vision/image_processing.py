@@ -170,7 +170,8 @@ class VKCloudVisionEntity(ImageProcessingEntity):
         confidence_threshold: float,
         file_out: str | None,
         bounding_boxes: str,
-        max_retries: int
+        max_retries: int,
+        tag_to_alias_map: dict | None = None
     ) -> JsonObjectType:
         """Recognize faces in an image."""
         entry = self.hass.config_entries.async_loaded_entries(DOMAIN)[0]
@@ -189,6 +190,7 @@ class VKCloudVisionEntity(ImageProcessingEntity):
                 create_new=create_new,
                 update_embedding=update_embedding,
                 confidence_threshold=confidence_threshold,
+                tag_to_alias_map=tag_to_alias_map,
                 max_retries=max_retries,
             )
         except Exception as err:
