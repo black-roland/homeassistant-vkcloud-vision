@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (ConfigEntry, ConfigFlow,
                                           ConfigFlowResult, OptionsFlow)
 from homeassistant.helpers.selector import (NumberSelector,
@@ -15,16 +16,18 @@ from homeassistant.helpers.selector import (NumberSelector,
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
 from .const import (CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_CONFIRM_DELETE,
-                    CONF_CONFIRM_TRUNCATE, CONF_DELETE_PERSON_SPACE,
-                    CONF_PERSON_IDS, CONF_REFRESH_TOKEN, CONF_TRAINING_MODE,
-                    CONF_TRUNCATE_SPACE, DEFAULT_SPACE, DEFAULT_TRAINING_MODE,
-                    DOMAIN, LOGGER)
+                    CONF_CONFIRM_TRUNCATE, CONF_CREATE_NEW,
+                    CONF_DELETE_PERSON_SPACE, CONF_PERSON_IDS,
+                    CONF_REFRESH_TOKEN, CONF_TRUNCATE_SPACE,
+                    CONF_UPDATE_EMBEDDING, DEFAULT_CREATE_NEW, DEFAULT_SPACE,
+                    DEFAULT_UPDATE_EMBEDDING, DOMAIN, LOGGER,
+                    SECTION_TRAINING_MODE)
 
 
 class VKCloudVisionConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VK Cloud Vision."""
 
-    VERSION = 3
+    VERSION = 4
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the initial step (OAuth only for new users)."""
@@ -146,14 +149,26 @@ class VKCloudVisionOptionsFlow(OptionsFlow):
         """Manage face recognition options (training mode)."""
         if user_input is not None:
             new_opts = dict(self.config_entry.options)
-            new_opts[CONF_TRAINING_MODE] = user_input[CONF_TRAINING_MODE]
+            new_opts.update(user_input.get(SECTION_TRAINING_MODE, {}))
             return self.async_create_entry(data=new_opts)
 
-        training_mode = self.config_entry.options.get(CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE)
+        create_new_default = self.config_entry.options.get(CONF_CREATE_NEW, DEFAULT_CREATE_NEW)
+        update_embedding_default = self.config_entry.options.get(CONF_UPDATE_EMBEDDING, DEFAULT_UPDATE_EMBEDDING)
 
-        schema = vol.Schema({
-            vol.Required(CONF_TRAINING_MODE, default=training_mode): bool,
+        training_schema = vol.Schema({
+            vol.Required(CONF_CREATE_NEW, default=create_new_default): bool,
+            vol.Required(CONF_UPDATE_EMBEDDING, default=update_embedding_default): bool,
         })
+
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema({
+                vol.Required(SECTION_TRAINING_MODE): data_entry_flow.section(
+                    training_schema,
+                    {"collapsed": False},
+                ),
+            }),
+            self.config_entry.options,
+        )
 
         return self.async_show_form(
             step_id="face_recognition",

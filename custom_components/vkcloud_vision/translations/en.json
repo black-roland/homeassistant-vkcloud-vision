@@ -39,9 +39,15 @@
       },
       "face_recognition": {
         "title": "Face Recognition",
-        "description": "Enable training mode to automatically enroll unrecognized faces as new persons and update stored face references for better future recognition.\n\nThese settings act as defaults and can be overridden in `vkcloud_vision.recognize_faces` service call`.",
-        "data": {
-          "training_mode": "Training mode"
+        "sections": {
+          "training_mode": {
+            "name": "Training mode",
+            "description": "Configure training mode options to automatically enroll unrecognized faces as new persons and update stored face references for better future recognition.\n\nThese settings act as defaults and can be overridden in `vkcloud_vision.recognize_faces` service call.",
+            "data": {
+              "create_new": "Create new faces",
+              "update_embedding": "Update face embeddings"
+            }
+          }
         }
       },
       "truncate_space": {
@@ -125,7 +131,7 @@
     },
     "recognize_faces": {
       "name": "Recognize Faces",
-      "description": "Identify persons in camera snapshots using face recognition. Use training mode in integration options to automatically enroll new faces.",
+      "description": "Identify persons in camera snapshots using face recognition. Configure training mode options in integration settings to automatically enroll new faces and update embeddings.",
       "fields": {
         "space": {
           "name": "Face Space",

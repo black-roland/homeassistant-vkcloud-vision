@@ -52,14 +52,16 @@ DEFAULT_SNAPSHOT_INTERVAL_SEC = .5
 DEFAULT_MAX_RETRIES = 3
 DEFAULT_SPACE = 0
 DEFAULT_CREATE_NEW = False
-DEFAULT_TRAINING_MODE = False
+DEFAULT_UPDATE_EMBEDDING = True
 
-CONF_TRAINING_MODE = "training_mode"
+CONF_CREATE_NEW = "create_new"
+CONF_UPDATE_EMBEDDING = "update_embedding"
 CONF_TRUNCATE_SPACE = "truncate_space"
 CONF_CONFIRM_TRUNCATE = "confirm_truncate"
 CONF_DELETE_PERSON_SPACE = "delete_person_space"
 CONF_PERSON_IDS = "person_ids"
 CONF_CONFIRM_DELETE = "confirm_delete"
+SECTION_TRAINING_MODE = "training_mode"
 
 SERVICE_DETECT_OBJECTS = "detect_objects"
 SERVICE_RECOGNIZE_TEXT = "recognize_text"
