@@ -61,6 +61,9 @@ class BoundingBoxes:
                 elif self.mode == BoundingBoxesType.TAG:
                     text = label.get("tag")
                     score = label.get("similarity", 0.0)
+                elif self.mode == BoundingBoxesType.ALIAS:
+                    text = label.get("alias", label.get("tag"))
+                    score = label.get("similarity", 0.0)
 
                 self._draw_box(draw, tuple(coord), text, score)
 

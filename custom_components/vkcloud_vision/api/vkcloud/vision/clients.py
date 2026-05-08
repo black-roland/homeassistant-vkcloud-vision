@@ -92,6 +92,7 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
         create_new: bool = False,
         update_embedding: bool = True,
         confidence_threshold: float = 0.1,
+        tag_to_alias_map: dict | None = None,
         max_retries: int = 3,
     ) -> VKCloudVisionFaceRecognitionResponse:
         """Recognize a person in a photo."""
@@ -102,4 +103,8 @@ class VKCloudVisionPersonsClient(VKCloudVisionBaseClient):
             "images": images,  # Expected format: [{"name": str}]
         }
         raw_response = await self._make_request("/v1/persons/recognize", meta, files, max_retries=max_retries)
-        return VKCloudVisionFaceRecognitionResponse(raw_response, confidence_threshold=confidence_threshold)
+        return VKCloudVisionFaceRecognitionResponse(
+            raw_response,
+            confidence_threshold=confidence_threshold,
+            tag_to_alias_map=tag_to_alias_map
+        )

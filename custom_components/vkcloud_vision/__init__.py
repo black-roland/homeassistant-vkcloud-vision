@@ -24,12 +24,14 @@ from .const import (ATTR_BOUNDING_BOXES, ATTR_CONFIDENCE_THRESHOLD,
                     ATTR_MAX_RETRIES, ATTR_MODES, ATTR_NUM_SNAPSHOTS,
                     ATTR_PROB_THRESHOLD, ATTR_SNAPSHOT_INTERVAL_SEC,
                     ATTR_SPACE, ATTR_UPDATE_EMBEDDING, CONF_API_KEY,
-                    CONF_CLIENT_ID, CONF_REFRESH_TOKEN, CONF_TRAINING_MODE,
-                    DEFAULT_CONFIDENCE_THRESHOLD, DEFAULT_FACE_BOUNDING_BOXES,
+                    CONF_CLIENT_ID, CONF_CREATE_NEW, CONF_PERSON_ALIASES,
+                    CONF_REFRESH_TOKEN,
+                    CONF_UPDATE_EMBEDDING, DEFAULT_CONFIDENCE_THRESHOLD,
+                    DEFAULT_CREATE_NEW, DEFAULT_FACE_BOUNDING_BOXES,
                     DEFAULT_MAX_RETRIES, DEFAULT_MODES, DEFAULT_NUM_SNAPSHOTS,
                     DEFAULT_OBJECT_BOUNDING_BOXES, DEFAULT_PROB_THRESHOLD,
                     DEFAULT_SNAPSHOT_INTERVAL_SEC, DEFAULT_SPACE,
-                    DEFAULT_TRAINING_MODE, DOMAIN, LOGGER,
+                    DEFAULT_UPDATE_EMBEDDING, DOMAIN, LOGGER,
                     SERVICE_DETECT_OBJECTS, SERVICE_RECOGNIZE_FACES,
                     SERVICE_RECOGNIZE_TEXT, VALID_MODES, BoundingBoxesType,
                     ResponseType)
@@ -108,24 +110,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vision_entity = get_vision_entity(hass)
         vision_entry = hass.config_entries.async_loaded_entries(DOMAIN)[0]
 
-        training_mode = vision_entry.options.get(CONF_TRAINING_MODE, DEFAULT_TRAINING_MODE)
-        create_new = call.data.get(ATTR_CREATE_NEW, training_mode)
-        update_embedding = call.data.get(ATTR_UPDATE_EMBEDDING, training_mode)
-        LOGGER.debug("Trainig mode: %s, create new: %s, update embedding: %s",
-                     training_mode, create_new, update_embedding)
+        # Training mode
+        create_new_default = vision_entry.options.get(CONF_CREATE_NEW, DEFAULT_CREATE_NEW)
+        update_embedding_default = vision_entry.options.get(CONF_UPDATE_EMBEDDING, DEFAULT_UPDATE_EMBEDDING)
+        create_new = call.data.get(ATTR_CREATE_NEW, create_new_default)
+        update_embedding = call.data.get(ATTR_UPDATE_EMBEDDING, update_embedding_default)
+        LOGGER.debug("Create new: %s, update embedding: %s", create_new, update_embedding)
+
+        # Get and filter person aliases by current space
+        space = call.data.get(ATTR_SPACE, DEFAULT_SPACE)
+        alias_entries = vision_entry.options.get(CONF_PERSON_ALIASES, [])
+        tag_to_alias_map = {
+            f"person{alias_entry['person_id']}": alias_entry["alias"]
+            for alias_entry in alias_entries
+            if alias_entry["space"] == space
+        }
 
         result = {}
         for camera_id in call.data.get("entity_id", []):
             try:
                 result[camera_id] = await vision_entity.recognize_faces(
                     camera_id,
-                    call.data.get(ATTR_SPACE, DEFAULT_SPACE),
+                    space,
                     create_new,
                     update_embedding,
                     call.data.get(ATTR_CONFIDENCE_THRESHOLD, DEFAULT_CONFIDENCE_THRESHOLD),
                     call.data.get(ATTR_FILE_OUT),
                     call.data.get(ATTR_BOUNDING_BOXES, DEFAULT_FACE_BOUNDING_BOXES),
                     call.data.get(ATTR_MAX_RETRIES, DEFAULT_MAX_RETRIES),
+                    tag_to_alias_map,
                 )
             except HomeAssistantError as err:
                 result[camera_id] = {
@@ -194,6 +207,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 BoundingBoxesType.NONE.value,
                 BoundingBoxesType.NO_LABELS.value,
                 BoundingBoxesType.TAG.value,
+                BoundingBoxesType.ALIAS.value,
             ]),
             vol.Optional(
                 ATTR_MAX_RETRIES, default=DEFAULT_MAX_RETRIES
@@ -227,17 +241,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 # Migration (keeps old OAuth entries working until user reconfigures)
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate config entry to latest version."""
-    if config_entry.version == 1:
-        # v1 → v2: Bump version, keep OAuth data
-        new_data = dict(config_entry.data)
-        hass.config_entries.async_update_entry(config_entry, version=3, data=new_data)
-        LOGGER.info("Migrated VK Cloud Vision config entry from v1")
-
-    if config_entry.version == 2:
+    if config_entry.version == 1 or config_entry.version == 2:
+        # v1 → v3: Bump version, keep OAuth data
         # v2 → v3: Bump version, no data changes (supports both auth types)
         new_data = dict(config_entry.data)
         hass.config_entries.async_update_entry(config_entry, version=3, data=new_data)
-        LOGGER.info("Migrated VK Cloud Vision config entry from v2")
-        return True
+        LOGGER.info("Migrated VK Cloud Vision config entry from v%s", config_entry.version)
 
-    return False
+    if config_entry.version == 3:
+        # v3 → v4: Replace single training_mode with separate create_new/update_embedding options
+        new_options = dict(config_entry.options)
+        new_options[CONF_CREATE_NEW] = new_options.pop("training_mode", False)
+        new_options[CONF_UPDATE_EMBEDDING] = True
+        hass.config_entries.async_update_entry(config_entry, version=4, options=new_options)
+        LOGGER.info("Migrated VK Cloud Vision config entry from v3 to v4")
+
+    return True

@@ -3,7 +3,7 @@
   "name": "VK Cloud Vision",
   "codeowners": ["@black-roland"],
   "config_flow": true,
-  "dependencies": ["camera"],
+  "dependencies": ["camera", "file_upload"],
   "documentation": "https://github.com/black-roland/homeassistant-vkcloud-vision",
   "integration_type": "service",
   "iot_class": "cloud_polling",

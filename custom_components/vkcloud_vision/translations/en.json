@@ -33,15 +33,29 @@
         "description": "Manage face recognition and data cleanup.",
         "menu_options": {
           "face_recognition": "Face recognition settings",
+          "manual_training": "Manual training",
           "truncate_space": "Clear face data",
           "delete_persons": "Delete specific persons"
         }
       },
       "face_recognition": {
         "title": "Face Recognition",
-        "description": "Enable training mode to automatically enroll unrecognized faces as new persons and update stored face references for better future recognition.\n\nThese settings act as defaults and can be overridden in `vkcloud_vision.recognize_faces` service call`.",
-        "data": {
-          "training_mode": "Training mode"
+        "sections": {
+          "section_training_mode": {
+            "name": "Training mode",
+            "description": "Configure training mode options to automatically enroll unrecognized faces as new persons and update stored face references for better future recognition.\n\nThese settings act as defaults and can be overridden in `vkcloud_vision.recognize_faces` service call.",
+            "data": {
+              "create_new": "Create new faces",
+              "update_embedding": "Update face embeddings"
+            }
+          },
+          "section_person_aliases": {
+            "name": "Person aliases",
+            "description": "Map person IDs to aliases for specific spaces. Each entry includes person ID, space (0–9), and alias name.",
+            "data": {
+              "person_aliases": "Aliases"
+            }
+          }
         }
       },
       "truncate_space": {
@@ -60,6 +74,15 @@
           "person_ids": "Person IDs (comma-separated)",
           "confirm_delete": "I understand, delete these persons"
         }
+      },
+      "manual_training": {
+        "title": "Manual Training",
+        "description": "Upload a photo to train face recognition. Both create_new and update_embedding are enabled.",
+        "data": {
+          "space": "Space",
+          "photo": "Training Photo",
+          "alias": "Alias (optional, for first face)"
+        }
       }
     },
     "error": {
@@ -67,11 +90,15 @@
       "truncate_failed": "Failed to clear space. Check Home Assistant logs and try again.",
       "confirm_delete": "Please confirm the deletion",
       "invalid_person_ids": "Invalid person IDs (must be comma-separated integers)",
-      "delete_failed": "Failed to delete persons. Check Home Assistant logs and try again."
+      "delete_failed": "Failed to delete persons. Check Home Assistant logs and try again.",
+      "no_faces": "No faces detected in the photo",
+      "training_failed": "Training failed. Check Home Assistant logs and try again."
     },
     "abort": {
       "truncate_success": "Space cleared successfully",
-      "delete_success": "Persons deleted successfully"
+      "delete_success": "Persons deleted successfully",
+      "manual_training_success": "Training complete. Recognized tags: {tags}",
+      "manual_training_no_faces": "No faces detected in the uploaded photo."
     }
   },
   "services": {
@@ -125,7 +152,7 @@
     },
     "recognize_faces": {
       "name": "Recognize Faces",
-      "description": "Identify persons in camera snapshots using face recognition. Use training mode in integration options to automatically enroll new faces.",
+      "description": "Identify persons in camera snapshots using face recognition. Configure training mode options in integration settings to automatically enroll new faces and update embeddings.",
       "fields": {
         "space": {
           "name": "Face Space",
@@ -153,7 +180,7 @@
         },
         "bounding_boxes": {
           "name": "Bounding Boxes Style",
-          "description": "Configure how recognized faces are visualized. Defaults to \"tag\" (tag + similarity%)."
+          "description": "Configure how recognized faces are visualized. Defaults to \"alias\" (alias + similarity%)."
         }
       }
     }
@@ -188,7 +215,15 @@
       "options": {
         "none": "No bounding boxes",
         "no_labels": "No labels",
-        "tag": "Tag"
+        "tag": "Tag",
+        "alias": "Alias (person name)"
+      }
+    },
+    "person_aliases": {
+      "fields": {
+        "space": "Space",
+        "person_id": "Person ID",
+        "alias": "Alias"
       }
     }
   },
