@@ -7,19 +7,22 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import data_entry_flow
+from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import (ConfigEntry, ConfigFlow,
                                           ConfigFlowResult, OptionsFlow)
-from homeassistant.helpers.selector import (NumberSelector,
+from homeassistant.helpers.selector import (FileSelector, FileSelectorConfig,
+                                            NumberSelector,
                                             NumberSelectorConfig,
                                             NumberSelectorMode, ObjectSelector,
                                             ObjectSelectorConfig, TextSelector)
 
 from .api.vkcloud.auth import VKCloudAuth
 from .api.vkcloud.vision import VKCloudVision
-from .const import (CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_CONFIRM_DELETE,
-                    CONF_CONFIRM_TRUNCATE, CONF_CREATE_NEW,
-                    CONF_DELETE_PERSON_SPACE, CONF_PERSON_ALIASES,
-                    CONF_PERSON_IDS, CONF_REFRESH_TOKEN, CONF_TRUNCATE_SPACE,
+from .const import (CONF_ALIAS, CONF_CLIENT_ID, CONF_CLIENT_SECRET,
+                    CONF_CONFIRM_DELETE, CONF_CONFIRM_TRUNCATE,
+                    CONF_CREATE_NEW, CONF_DELETE_PERSON_SPACE,
+                    CONF_PERSON_ALIASES, CONF_PERSON_IDS, CONF_PHOTO,
+                    CONF_REFRESH_TOKEN, CONF_SPACE, CONF_TRUNCATE_SPACE,
                     CONF_UPDATE_EMBEDDING, DEFAULT_CREATE_NEW, DEFAULT_SPACE,
                     DEFAULT_UPDATE_EMBEDDING, DOMAIN, LOGGER,
                     SECTION_PERSON_ALIASES, SECTION_TRAINING_MODE)
@@ -143,7 +146,7 @@ class VKCloudVisionOptionsFlow(OptionsFlow):
         """Show the main menu."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["face_recognition", "truncate_space", "delete_persons"],
+            menu_options=["face_recognition", "manual_training", "truncate_space", "delete_persons"],
         )
 
     async def async_step_face_recognition(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -290,3 +293,105 @@ class VKCloudVisionOptionsFlow(OptionsFlow):
             data_schema=data_schema,
             errors=errors,
         )
+
+    async def async_step_manual_training(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Handle manual training with photo upload."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            return await self._process_manual_training(user_input, errors)
+
+        return self.async_show_form(
+            step_id="manual_training",
+            data_schema=self._build_manual_training_schema(),
+            errors=errors,
+        )
+
+    def _build_manual_training_schema(self) -> vol.Schema:
+        """Build the manual training form schema."""
+        return vol.Schema({
+            vol.Required(CONF_SPACE, default=DEFAULT_SPACE): vol.All(
+                NumberSelector(NumberSelectorConfig(min=0, max=9, mode=NumberSelectorMode.BOX)),
+                vol.Coerce(int),
+            ),
+            vol.Required(CONF_PHOTO): FileSelector(FileSelectorConfig(accept=".jpg,.jpeg,.png,.tiff")),
+            vol.Optional(CONF_ALIAS): TextSelector(),
+        })
+
+    def _read_uploaded_photo(self, file_id: str) -> bytes:
+        """Read uploaded photo bytes from file ID."""
+        with process_uploaded_file(self.hass, file_id) as path:
+            return path.read_bytes()
+
+    async def _process_manual_training(self, user_input: dict[str, Any], errors: dict[str, str]) -> ConfigFlowResult:
+        """Process manual training form submission."""
+
+        try:
+            file_id = user_input[CONF_PHOTO]
+            space = user_input[CONF_SPACE]
+            alias = user_input.get(CONF_ALIAS, "").strip()
+            photo_bytes = await self.hass.async_add_executor_job(self._read_uploaded_photo, file_id)
+
+            client: VKCloudVision = self.config_entry.runtime_data
+            response = await client.persons.recognize(
+                files=[photo_bytes],
+                space=space,
+                images=[{"name": "training_photo"}],
+                create_new=True,
+                update_embedding=True,
+                max_retries=1,
+            )
+
+            if response.has_errors:
+                raise Exception(response.error_message)
+
+            person_tags = [p["tag"] for p in response.persons if p.get("tag", "undefined") != "undefined"]
+            if not person_tags:
+                errors["base"] = "no_faces"
+                return self.async_show_form(
+                    step_id="manual_training",
+                    data_schema=self._build_manual_training_schema(),
+                    errors=errors,
+                )
+
+            person_ids = [int(t.replace("person", "")) for t in person_tags]
+            aliases = self._update_aliases(person_ids, space, alias)
+
+            new_opts = dict(self.config_entry.options)
+            new_opts[CONF_PERSON_ALIASES] = aliases
+            self.hass.config_entries.async_update_entry(self.config_entry, options=new_opts)
+
+            tags_str = ", ".join(person_tags)
+            return self.async_abort(
+                reason="manual_training_success",
+                description_placeholders={"tags": tags_str},
+            )
+
+        except Exception as err:
+            LOGGER.exception("Manual training failed", exc_info=err)
+            errors["base"] = "training_failed"
+            return self.async_show_form(
+                step_id="manual_training",
+                data_schema=self._build_manual_training_schema(),
+                errors=errors,
+            )
+
+    def _update_aliases(self, person_ids: list[int], space: int, alias: str) -> list[dict[str, Any]]:
+        aliases: list[dict[str, Any]] = list(self.config_entry.options.get(CONF_PERSON_ALIASES, []))
+        first_pid = person_ids[0]
+
+        if alias:
+            found = False
+            for entry in aliases:
+                if entry.get("person_id") == first_pid and entry.get("space") == space:
+                    entry["alias"] = alias
+                    found = True
+                    break
+
+            if not found:
+                aliases.append({"person_id": first_pid, "space": space, "alias": alias})
+
+        for pid in person_ids:
+            if not any(a["person_id"] == pid and a["space"] == space for a in aliases):
+                aliases.append({"person_id": pid, "space": space, "alias": f"person{pid}"})
+
+        return aliases
