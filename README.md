@@ -32,6 +32,9 @@ VK Cloud Vision — это облачный сервис, плата за кот
 
 ### Подготовка
 
+> [!WARNING]
+> Пользователи сообщают, что регистрация для физических лиц может быть недоступна. Уточняйте возможность регистрации в службе поддержки VK Cloud, прежде чем начинать настройку.
+
 1. Зарегистрируйтесь в [VK Cloud](https://cloud.vk.com/app/signup/).
 2. Получите **Идентификатор клиента** и **Секретный ключ** в разделе «[Доступ через идентификатор клиента и секретный ключ](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/)».
 3. Сохраните полученные данные.
@@ -220,6 +223,10 @@ data:
 
 ![Спасибо][donors-list]
 
+Отдельная благодарность **[@Grifindorec](https://github.com/Grifindorec)** — давнему подписчику на Boosty, по инициативе которого появилась **функция распознавания лиц**. Спасибо, что помогаете делать проект лучше. 🙌
+
+Другие идеи, предложенные подписчиками, я выделяю [меткой `by a boosty supporter`](https://github.com/black-roland/homeassistant-vkcloud-vision/issues?q=label%3A%22by%20a%20boosty%20supporter%22).
+
 ## Уведомление
 
 Данная интеграция является неофициальной и не связана с VK Cloud. VK Cloud Vision — это сервис, предоставляемый VK Cloud.
@@ -252,6 +259,9 @@ This integration brings cloud-based object and text recognition to Home Assistan
 ## Installation and Setup
 
 ### Prerequisites
+
+> [!WARNING]
+> Users report that registration for individuals may be unavailable. Check with VK Cloud support before proceeding.
 
 1. Sign up at [VK Cloud](https://cloud.vk.com/app/signup/).
 2. Get **Client ID** and **Client Secret** in the [dashboard](https://msk.cloud.vk.com/app/services/machinelearning/vision/access/).
