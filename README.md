@@ -311,4 +311,5 @@ This integration is released under the [Mozilla Public License Version 2.0](http
 
 Includes the **Tuffy Bold** font by Thatcher Ulrich, which is in the [public domain](https://tulrich.com/fonts/).
 
-[donors-list]: https://github.com/user-attachments/assets/07e72d3d-4b3b-4c22-9d95-b0157d82e77c
+[donors-list]: https://github.com/user-attachments/assets/9a509bf0-5d02-4265-a730-c96c17838249
+
